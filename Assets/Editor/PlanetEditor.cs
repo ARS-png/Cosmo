@@ -1,0 +1,59 @@
+using UnityEngine;
+using UnityEditor;
+
+[CustomEditor(typeof(Planet))]
+public class PlanetEditor : Editor
+{
+    Planet planet;
+    Editor shapeEditor;
+    Editor colorEditor;
+
+    public override void OnInspectorGUI()
+    {
+        // 1. Рисуем стандартные поля (включая слоты для ColorSettings и ShapeSettings)
+        using (var check = new EditorGUI.ChangeCheckScope())
+        {
+            base.OnInspectorGUI();
+            if (check.changed)
+            {
+                planet.GeneratePlanet();
+            }
+        }
+
+        if (GUILayout.Button("Generate Planet"))
+        {
+            planet.GeneratePlanet();
+        }
+
+        // 2. Рисуем вложенные редакторы
+        DrawSettingsEditor(planet.shapeSettings, planet.OnShapeSettingsUpdated, ref planet.shapeSettingsFoldout, ref shapeEditor);
+        DrawSettingsEditor(planet.colorSettings, planet.OnColorSettingsUpdated, ref planet.colorSettingsFoldout, ref colorEditor);
+    }
+
+    void DrawSettingsEditor(Object settings, System.Action onSettingsUpdated, ref bool foldout, ref Editor editor)
+    {
+        if (settings != null)
+        {
+            foldout = EditorGUILayout.InspectorTitlebar(foldout, settings);
+
+            using (var check = new EditorGUI.ChangeCheckScope())
+            {
+                if (foldout)
+                {
+                    CreateCachedEditor(settings, null, ref editor);
+                    editor.OnInspectorGUI();
+
+                    if (check.changed)
+                    {
+                        onSettingsUpdated?.Invoke();
+                    }
+                }
+            }
+        }
+    }
+
+    private void OnEnable()
+    {
+        planet = (Planet)target;
+    }
+}

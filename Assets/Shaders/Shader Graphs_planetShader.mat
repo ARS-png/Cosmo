@@ -1,0 +1,151 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7104622295224167746
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Editor::UnityEditor.Rendering.Universal.AssetVersion
+  version: 10
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Shader Graphs_planetShader
+  m_Shader: {fileID: -6465566751694194690, guid: 4a3e29526303f8d45a5b63976d869954, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _ENUM_A
+  m_LightmapFlags: 2
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 2000
+  stringTagMap: {}
+  disabledShaderPasses:
+  - MOTIONVECTORS
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _GrassAmbientOcclusion:
+        m_Texture: {fileID: 2800000, guid: 953b694c860363944bc5b1fe384f230e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GrassRougness:
+        m_Texture: {fileID: 2800000, guid: 193fe4cda8a2d8a4f9021ebdfd7dbbb1, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Grass_Albedo:
+        m_Texture: {fileID: 2800000, guid: 8b85c6192303a36418f5fb78af1d7506, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Grass_Normal:
+        m_Texture: {fileID: 2800000, guid: 9e24a0fa6df90444395813d5a9c5c5c8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Grass_Texture:
+        m_Texture: {fileID: 2800000, guid: 8b85c6192303a36418f5fb78af1d7506, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _HeightGrassTexture:
+        m_Texture: {fileID: 2800000, guid: 61ae56208b67bf14388105032b5a2b08, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _HeigthRockTexture:
+        m_Texture: {fileID: 2800000, guid: 0566faf82e1f23c4784ff89298e4f034, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OtherTexture:
+        m_Texture: {fileID: 2800000, guid: b58207f36c6c83f4985b0eeb42337b90, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _PesokAmbOcclusion:
+        m_Texture: {fileID: 2800000, guid: aa5f1c29a542e1a4da8a9b29aa1d8f41, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _PesokNormal:
+        m_Texture: {fileID: 2800000, guid: 4e5619335cef98b478fe854c831e403e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _PesokSmoothness:
+        m_Texture: {fileID: 2800000, guid: 2eac9f65bfea52349b30b849d391906f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _PesokTexture:
+        m_Texture: {fileID: 2800000, guid: 9ed723d691bfc434ebef6dbb207c80f9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Planet_Texture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockAmbOcclusion:
+        m_Texture: {fileID: 2800000, guid: 5bd204294f69de94690aa571590dd3db, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _RockRougness:
+        m_Texture: {fileID: 2800000, guid: 1499a3aa2f68d7546a72be55c21bb09b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Rock_Albedo:
+        m_Texture: {fileID: 2800000, guid: b58207f36c6c83f4985b0eeb42337b90, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Rock_Normal:
+        m_Texture: {fileID: 2800000, guid: 486f1affece2a044c89ae31b3dab1059, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _: 0
+    - _AmbOcclusionMultiplier: 1
+    - _AmbientOcclusionMultiplier: 5
+    - _AmbientOcclusionStrength: 1
+    - _DetailGrassTile: 0.1115
+    - _DetailPesokTile: 0.1
+    - _DetailRockTile: 0.1
+    - _DetalRockTile: 0.1
+    - _ENUM: 0
+    - _GrassFilterMax: 500
+    - _GrassFilterMin: 1
+    - _GrassTile: 0.001
+    - _HeightStrength: 0.2
+    - _PesokFilterMax: 420
+    - _PesokFilterMin: 50
+    - _PesokTile: 0.001
+    - _QueueControl: 0
+    - _QueueOffset: 0
+    - _RockFilterMax: 300
+    - _RockFilterMin: 1
+    - _RockTile: 0.001
+    - _blend: 1
+    - _smoothness: 51.7
+    - _smoothnessMultiplier: 0
+    - _tile: 0.001
+    m_Colors:
+    - _ElevationMinMax: {r: -0.069824494, g: 0.13995542, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

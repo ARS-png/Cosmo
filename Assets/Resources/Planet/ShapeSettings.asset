@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f129c8f2ab40fc4ab1176ff388ba4f8, type: 3}
+  m_Name: ShapeSettings
+  m_EditorClassIdentifier: Assembly-CSharp::ShapeSettings
+  planetRadius: 1000
+  waterRadiusMultiplier: 1.006
+  atmosphereRadiusMultiplier: 1.3
+  noiseLayers:
+  - enabled: 1
+    useFirstLayerAsTheMask: 0
+    noiseSettings:
+      filterType: 0
+      simpleNoiseSettings:
+        strength: 0.03
+        roughness: 13.13
+        baseRoughness: 1.49
+        center: {x: 2.21, y: 0, z: 0}
+        numLayers: 2
+        persistence: 0.09
+        minValue: 0.39
+      rigidNoiseSettings:
+        strength: 0
+        roughness: 2
+        baseRoughness: 1
+        center: {x: 0, y: 0, z: 0}
+        numLayers: 0
+        persistence: 0.5
+        minValue: 0
+        weightMultiplier: 1
+  - enabled: 1
+    useFirstLayerAsTheMask: 1
+    noiseSettings:
+      filterType: 0
+      simpleNoiseSettings:
+        strength: 0.54
+        roughness: 13.5
+        baseRoughness: 38.27
+        center: {x: 0, y: 0, z: 0}
+        numLayers: 4
+        persistence: 0.5
+        minValue: 0.33
+      rigidNoiseSettings:
+        strength: 0
+        roughness: 2
+        baseRoughness: 1
+        center: {x: 0, y: 0, z: 0}
+        numLayers: 3
+        persistence: 0.5
+        minValue: 0
+        weightMultiplier: 1
+  - enabled: 0
+    useFirstLayerAsTheMask: 1
+    noiseSettings:
+      filterType: 0
+      simpleNoiseSettings:
+        strength: 0.02
+        roughness: 7.24
+        baseRoughness: 17.15
+        center: {x: 0, y: 0, z: 0}
+        numLayers: 3
+        persistence: 2.09
+        minValue: 0
+      rigidNoiseSettings:
+        strength: 6.6
+        roughness: 31.28
+        baseRoughness: 4.51
+        center: {x: 0, y: 0, z: 0}
+        numLayers: 5
+        persistence: 0.33
+        minValue: 0.29
+        weightMultiplier: 1
+  - enabled: 1
+    useFirstLayerAsTheMask: 1
+    noiseSettings:
+      filterType: 1
+      simpleNoiseSettings:
+        strength: 0
+        roughness: 2
+        baseRoughness: 1
+        center: {x: 0, y: 0, z: 0}
+        numLayers: 0
+        persistence: 0.5
+        minValue: 0
+      rigidNoiseSettings:
+        strength: 10
+        roughness: 11.72
+        baseRoughness: 1.32
+        center: {x: 0, y: 0, z: 0}
+        numLayers: 4
+        persistence: 0.07
+        minValue: 0.47
+        weightMultiplier: 3.93
