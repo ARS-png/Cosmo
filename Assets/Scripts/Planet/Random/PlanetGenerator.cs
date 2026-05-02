@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlanetGenerator : MonoBehaviour
 {
     [Header("Random Planet Attributes")]
-    public RandomPlanetSettings settings;
+    public RandomPlanetSettings rndSettings;
 
     [HideInInspector]
     public bool settingsFoldout = false;
@@ -12,6 +12,8 @@ public class PlanetGenerator : MonoBehaviour
     public Material copyMaterial;
 
     public Material copyAtmosphereMaterial;
+
+    public Material copyWaterMaterial;
 
     private GameObject planetGO;
     private Planet planet;
@@ -27,8 +29,8 @@ public class PlanetGenerator : MonoBehaviour
 
         //-- terrain settings randomization
         ShapeSettings shapeSettings = ScriptableObject.CreateInstance<ShapeSettings>();
-        shapeSettings.planetRadius = settings.planetRadius.PickRandomValue();
-        shapeSettings.noiseLayers = new ShapeSettings.NoiseLayer[settings.noiseLayersAmount.PickRandomValue()];
+        shapeSettings.planetRadius = rndSettings.planetRadius.PickRandomValue();
+        shapeSettings.noiseLayers = new ShapeSettings.NoiseLayer[rndSettings.noiseLayersAmount.PickRandomValue()];
 
 
 
@@ -38,8 +40,8 @@ public class PlanetGenerator : MonoBehaviour
             randLayer.enabled = true;
             randLayer.useFirstLayerAsTheMask = i == 0 ? false : true;
 
-            shapeSettings.atmosphereRadiusMultiplier = settings.atmosphereRadiusMultiplier.PickRandomValue();
-            shapeSettings.waterRadiusMultiplier = settings.waterRadiusMultiplier.PickRandomValue();
+            shapeSettings.atmosphereRadiusMultiplier = rndSettings.atmosphereRadiusMultiplier.PickRandomValue();
+            shapeSettings.waterRadiusMultiplier = rndSettings.waterRadiusMultiplier.PickRandomValue();
 
             NoiseSettings randomNoiseSettings = new NoiseSettings();
 
@@ -48,7 +50,7 @@ public class PlanetGenerator : MonoBehaviour
             {
                 randomNoiseSettings.filterType = NoiseSettings.FilterType.Simple;
 
-                randomNoiseSettings.simpleNoiseSettings = settings.terrainConstants[i].PickRandomValue();
+                randomNoiseSettings.simpleNoiseSettings = rndSettings.terrainConstants[i].PickRandomValue();
 
                 randLayer.noiseSettings = randomNoiseSettings;
                 shapeSettings.noiseLayers[i] = randLayer;
@@ -60,17 +62,10 @@ public class PlanetGenerator : MonoBehaviour
                 randomNoiseSettings.filterType = RandomXT.RandomBool() == false ? NoiseSettings.FilterType.Rigid : NoiseSettings.FilterType.Simple;
 
                 if (randomNoiseSettings.filterType == NoiseSettings.FilterType.Simple)
-                {
-                    randomNoiseSettings.simpleNoiseSettings = settings.simpleTerrainSettings.PickRandomValue();
-
-                    //Debug.Log("simple");
-                }
+                    randomNoiseSettings.simpleNoiseSettings = rndSettings.simpleTerrainSettings.PickRandomValue();   
                 else
-                {
-                    randomNoiseSettings.rigidNoiseSettings = settings.rigidTerrainSettings.PickRandomValue();
-
-                    //Debug.Log("rigid");
-                }
+                    randomNoiseSettings.rigidNoiseSettings = rndSettings.rigidTerrainSettings.PickRandomValue();
+                
                 randLayer.noiseSettings = randomNoiseSettings;
                 shapeSettings.noiseLayers[i] = randLayer;
             }
@@ -84,51 +79,54 @@ public class PlanetGenerator : MonoBehaviour
 
         colorSettings.planetMaterial = new Material(copyMaterial);
         colorSettings.atmosphereMaterial = new Material(copyAtmosphereMaterial);
+        colorSettings.waterMaterial = new Material(copyWaterMaterial);
 
         colorSettings.biomeColorSettings = new ColorSettings.BiomeColorSettings();
-        colorSettings.biomeColorSettings.blendAmount = settings.biomeBlendAmount.PickRandomValue();
-        colorSettings.biomeColorSettings.noiseOffset = settings.biomeNoiseOffset.PickRandomValue();
-        colorSettings.biomeColorSettings.noiseStrength = settings.biomeNoiseStrength.PickRandomValue();
+        colorSettings.biomeColorSettings.blendAmount = rndSettings.biomeBlendAmount.PickRandomValue();
+        colorSettings.biomeColorSettings.noiseOffset = rndSettings.biomeNoiseOffset.PickRandomValue();
+        colorSettings.biomeColorSettings.noiseStrength = rndSettings.biomeNoiseStrength.PickRandomValue();
 
 
         NoiseSettings biomeNoiseSettings = new NoiseSettings();
         biomeNoiseSettings.filterType = NoiseSettings.FilterType.Simple;
-        biomeNoiseSettings.simpleNoiseSettings = settings.biomeNoiseSettings.PickRandomValue();
+        biomeNoiseSettings.simpleNoiseSettings = rndSettings.biomeNoiseSettings.PickRandomValue();
         colorSettings.biomeColorSettings.noise = biomeNoiseSettings;
 
 
         colorSettings.oceanColor = RandomXT.RandomGradient(new Color[] {
-            settings.ground.PickRandomValue(),
-            settings.cliff.PickRandomValue(),
-            settings.clifftop.PickRandomValue()
+            rndSettings.ground.PickRandomValue(),
+            rndSettings.cliff.PickRandomValue(),
+            rndSettings.clifftop.PickRandomValue()
         });
 
-        colorSettings.atmosphereColor = RandomXT.RandomGradient(new Color[] {
-            settings.ground.PickRandomValue(),
-            settings.cliff.PickRandomValue(),
-            settings.clifftop.PickRandomValue()
-        });
-
-      
-     
+        //colorSettings.atmosphereColor = RandomXT.RandomGradient(new Color[] {
+        //    rndSettings.ground.PickRandomValue(),
+        //    rndSettings.cliff.PickRandomValue(),
+        //    rndSettings.clifftop.PickRandomValue()
+        //});
 
 
+        
+       colorSettings.waterColor = rndSettings.waterColor.PickRandomValue();
+       colorSettings.atmosphereColor = rndSettings.atmosphereColor.PickRandomValue();
 
 
-        colorSettings.biomeColorSettings.biomes = new ColorSettings.BiomeColorSettings.Biome[settings.biomeCount.PickRandomValue()];
+
+
+        colorSettings.biomeColorSettings.biomes = new ColorSettings.BiomeColorSettings.Biome[rndSettings.biomeCount.PickRandomValue()];
         float startHeigth = 0f;
-        float increment = 1f / (float)settings.biomeCount.lastValue;
+        float increment = 1f / (float)rndSettings.biomeCount.lastValue;
 
 
         for (int i = 0; i < colorSettings.biomeColorSettings.biomes.Length; ++i)
         {
             colorSettings.biomeColorSettings.biomes[i] = new ColorSettings.BiomeColorSettings.Biome();
-            colorSettings.biomeColorSettings.biomes[i].tintPercent = settings.biomeTintPercent.PickRandomValue();
+            colorSettings.biomeColorSettings.biomes[i].tintPercent = rndSettings.biomeTintPercent.PickRandomValue();
             colorSettings.biomeColorSettings.biomes[i].startHeigth = startHeigth;
             colorSettings.biomeColorSettings.biomes[i].gradient = RandomXT.RandomGradient(new Color[] {
-                settings.ground.PickRandomValue(),
-                settings.cliff.PickRandomValue(),
-                settings.clifftop.PickRandomValue()
+                rndSettings.ground.PickRandomValue(),
+                rndSettings.cliff.PickRandomValue(),
+                rndSettings.clifftop.PickRandomValue()
             });
 
 
@@ -137,8 +135,8 @@ public class PlanetGenerator : MonoBehaviour
         }
 
 
-        planet.ConstructRandomPlanet(settings.resolution.PickRandomValue(), shapeSettings, colorSettings);
-
+        planet.ConstructRandomPlanet(rndSettings.resolution.PickRandomValue(), shapeSettings, colorSettings);
+        planetGO.isStatic = true; //
     }
 }
 

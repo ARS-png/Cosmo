@@ -17,7 +17,7 @@ public class PlanetGeneratorEditor : Editor
 
 
         // 2. Рисуем вложенные редакторы
-        DrawSettingsEditor(planetGenerator.settings, null, ref planetGenerator.settingsFoldout, ref planetEditor);
+        DrawSettingsEditor(planetGenerator.rndSettings, null, ref planetGenerator.settingsFoldout, ref planetEditor);
     }
 
     void DrawSettingsEditor(Object settings, System.Action onSettingsUpdated, ref bool foldout, ref Editor editor)

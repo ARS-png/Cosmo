@@ -14,11 +14,10 @@ public class Planet : MonoBehaviour
     [SerializeField, HideInInspector]
     MeshFilter[] waterMeshFilters;
 
-    GameObject atmoshereGO;
-
-
     [SerializeField, HideInInspector]
     TerrainFace[] waterTerrainFaces;
+
+    GameObject atmoshereGO;
 
 
     [Range(2, 256)]
@@ -107,10 +106,25 @@ public class Planet : MonoBehaviour
                 waterMeshFilters[i] = meshObj.AddComponent<MeshFilter>();
                 waterMeshFilters[i].mesh = new Mesh();
 
+
+                if (colorSettings.waterMaterial != null)
+                {
+                    waterMeshFilters[i].GetComponent<MeshRenderer>().sharedMaterial = colorSettings.waterMaterial;
+
+
+                    MeshRenderer meshRenderer = meshObj.GetComponent<MeshRenderer>();
+                    Material mat = meshRenderer.material = colorSettings.waterMaterial;
+
+                    mat.SetVector("_Deep_Water_Color", colorSettings.waterColor); //иожно и больше различий
+                }
+
+             
+
                 if (meshObj.TryGetComponent<Collider>(out Collider collider)) 
                 {
                     Destroy(collider);
                 }
+
 
                 if (meshObj.TryGetComponent<MeshRenderer>(out MeshRenderer renderer))
                 {
@@ -203,7 +217,12 @@ public class Planet : MonoBehaviour
 
      
         float planetRadius = shapeSettings.planetRadius;
-        float atmosphereRadius = planetRadius * (shapeSettings.atmosphereRadiusMultiplier == 0 ? 1.3f: shapeSettings.atmosphereRadiusMultiplier);
+
+
+        float arm = shapeSettings.atmosphereRadiusMultiplier;
+        float atmosphereRadius = planetRadius * (arm == 0 ? 1.3f: arm);
+
+
         float oceanRadius = shapeSettings.waterRadiusMultiplier; 
 
         
@@ -221,12 +240,10 @@ public class Planet : MonoBehaviour
             mat.SetVector("_PlanetCenter", transform.position);
             mat.SetFloat("_PlanetRadius", planetRadius);
             mat.SetFloat("_AtmosphereRadius", atmosphereRadius);
-            mat.SetFloat("_OceanRadius", oceanRadius);       
-            mat.SetColor("_BaseColor", RandomXT.RandomColor());
+            mat.SetFloat("_OceanRadius", oceanRadius);   
+            mat.SetColor("_BaseColor", colorSettings.atmosphereColor);
         }
     }
-
-
 
 
 
@@ -241,6 +258,7 @@ public class Planet : MonoBehaviour
             }
         }
     }
+
 
     void GenerateColors()
     {
@@ -270,11 +288,13 @@ public class Planet : MonoBehaviour
         GeneratePlanet();
     }
 
+
     private void Start()
     {
         if (!proceduralyGenerated)
             GeneratePlanet();
     }
+
 
     private void OnDisable()
     {

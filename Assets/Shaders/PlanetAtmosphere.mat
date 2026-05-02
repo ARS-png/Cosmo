@@ -50,7 +50,7 @@ Material:
     - _StarsIntensity: 28.89
     - _SunSize: 0.841
     m_Colors:
-    - _BaseColor: {r: 0.6002955, g: 0.16585782, b: 0.25381833, a: 0.66436315}
+    - _BaseColor: {r: 0.17935707, g: 0.09748411, b: 1, a: 0}
     - _OceanColor: {r: 0, g: 0.29999998, b: 0.5, a: 1}
     - _PlanetCenter: {r: -218, g: -9, b: -3510, a: 0}
     - _ScatteringCoeff: {r: 0.5, g: 0.7, b: 1, a: 1}

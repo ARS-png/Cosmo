@@ -24,4 +24,5 @@ public class RandomPlanetSettings : ScriptableObject
     public RandomFloat atmosphereRadiusMultiplier;
     public RandomFloat waterRadiusMultiplier;
     public RandomColor atmosphereColor;
+    public RandomColor waterColor;
 }

@@ -15,11 +15,11 @@ MonoBehaviour:
   resolution:
     min: 100
     max: 120
-    lastValue: 113
+    lastValue: 117
   planetRadius:
     min: 1000
     max: 1200
-    lastValue: 1026
+    lastValue: 1166
   noiseLayersAmount:
     min: 5
     max: 7
@@ -42,13 +42,13 @@ MonoBehaviour:
       persistence: 0.33
       minValue: 0.49
     lastValue:
-      strength: 0.2307561
-      roughness: 2.3921583
-      baseRoughness: 0.9674233
-      center: {x: 0.20678794, y: 0.6995718, z: 0.3259512}
+      strength: 0.145112
+      roughness: 2.181291
+      baseRoughness: 0.9285784
+      center: {x: 0.15465327, y: 6.278242, z: 0.65120065}
       numLayers: 2
-      persistence: 0.18680455
-      minValue: 0.33713013
+      persistence: 0.2687381
+      minValue: 0.30090612
   oceandepth:
     min: {r: 1, g: 0, b: 0.7270193, a: 0}
     max: {r: 1, g: 1, b: 1, a: 0}
@@ -60,19 +60,19 @@ MonoBehaviour:
   ground:
     min: {r: 0.34926683, g: 1, b: 0.18431371, a: 0}
     max: {r: 0.00642987, g: 0.0039215684, b: 1, a: 0}
-    lastValue: {r: 0.21576466, g: 0.749789, b: 0.46772155, a: 0}
+    lastValue: {r: 0.26541775, g: 0.24479955, b: 0.564291, a: 0}
   cliff:
     min: {r: 0.39684394, g: 0.48427665, b: 0.35787737, a: 0}
     max: {r: 0.9760411, g: 0.1607843, b: 1, a: 0}
-    lastValue: {r: 0.67768013, g: 0.38899404, b: 0.86993974, a: 0}
+    lastValue: {r: 0.7478297, g: 0.26539692, b: 0.7270602, a: 0}
   clifftop:
     min: {r: 0.6008999, g: 0.6226415, b: 0.5893556, a: 0}
     max: {r: 1, g: 1, b: 1, a: 0}
-    lastValue: {r: 0.98082286, g: 0.637531, b: 0.62304944, a: 0}
+    lastValue: {r: 0.9663398, g: 0.69248664, b: 0.8627198, a: 0}
   biomeTintPercent:
     min: 0.06
     max: 0.56
-    lastValue: 0.3356146
+    lastValue: 0.4757436
   biomeNoiseSettings:
     min:
       strength: 1
@@ -96,12 +96,12 @@ MonoBehaviour:
       baseRoughness: 1
       center: {x: 0, y: 0, z: 0}
       numLayers: 2
-      persistence: 0.09640448
+      persistence: 0.1367448
       minValue: 0
   biomeNoiseStrength:
     min: 0
     max: 1
-    lastValue: 0.16196764
+    lastValue: 0.9425914
   biomeNoiseOffset:
     min: 0
     max: 0
@@ -113,7 +113,7 @@ MonoBehaviour:
   biomeBlendAmount:
     min: 0
     max: 0.1
-    lastValue: 0.029481536
+    lastValue: 0.09669179
   smoothness:
     min: 0
     max: 0
@@ -138,13 +138,13 @@ MonoBehaviour:
       minValue: 0.3
       weightMultiplier: 0.76
     lastValue:
-      strength: 0.99421287
-      roughness: 0.87957084
-      baseRoughness: 0.4863966
-      center: {x: 0.44643965, y: 0.7104372, z: 0}
+      strength: 0.39989963
+      roughness: 0.56983256
+      baseRoughness: 1.2781368
+      center: {x: 0.49217597, y: 0.11619534, z: 0}
       numLayers: 3
-      persistence: 0.13236839
-      minValue: 0.2684173
+      persistence: 0.29466295
+      minValue: 0.22234756
       weightMultiplier: 100
   terrainConstants:
   - min:
@@ -164,13 +164,13 @@ MonoBehaviour:
       persistence: 0.1
       minValue: 0.4
     lastValue:
-      strength: 0.063935384
-      roughness: 9.061961
-      baseRoughness: 2.8804429
+      strength: 0.077065885
+      roughness: 5.5065994
+      baseRoughness: 1.5376159
       center: {x: 0, y: 0, z: 0}
       numLayers: 4
-      persistence: 0.0678494
-      minValue: 0.26647785
+      persistence: 0.099531755
+      minValue: 0.27890667
   - min:
       strength: 0.97
       roughness: 10.1
@@ -188,13 +188,13 @@ MonoBehaviour:
       persistence: 0.32
       minValue: 0.14
     lastValue:
-      strength: 0.36102086
-      roughness: 6.0581446
-      baseRoughness: 5.834061
+      strength: 0.46704394
+      roughness: 8.28868
+      baseRoughness: 10.483488
       center: {x: 0, y: 0, z: 0}
-      numLayers: 4
-      persistence: 0.08811986
-      minValue: 0.103019714
+      numLayers: 3
+      persistence: 0.13662444
+      minValue: 0.06521405
   - min:
       strength: 0.04
       roughness: 2
@@ -212,13 +212,13 @@ MonoBehaviour:
       persistence: 0.16
       minValue: 0.13
     lastValue:
-      strength: 0.18338461
-      roughness: 11.900399
-      baseRoughness: 15.188991
+      strength: 0.1166435
+      roughness: 2.4067583
+      baseRoughness: 11.624788
       center: {x: 0, y: 0, z: 0}
       numLayers: 3
-      persistence: 0.13823067
-      minValue: 0.016328167
+      persistence: 0.13308573
+      minValue: 0.041564368
   atmosphereRadiusMultiplier:
     min: 1.3
     max: 1.3
@@ -226,8 +226,12 @@ MonoBehaviour:
   waterRadiusMultiplier:
     min: 1
     max: 1.02
-    lastValue: 1.0123477
+    lastValue: 1.0102265
   atmosphereColor:
-    min: {r: 0.20392156, g: 1, b: 0.8401887, a: 0}
-    max: {r: 1, g: 0.67269236, b: 0.06666666, a: 0}
-    lastValue: {r: 0, g: 0, b: 0, a: 0}
+    min: {r: 0.9622642, g: 0.890774, b: 0, a: 0.4117647}
+    max: {r: 0, g: 0.03994465, b: 1, a: 0.58431375}
+    lastValue: {r: 0.84814996, g: 0.47994363, b: 0.36293882, a: 0.44402882}
+  waterColor:
+    min: {r: 0, g: 0.93499184, b: 1, a: 1}
+    max: {r: 0.8535919, g: 0, b: 1, a: 1}
+    lastValue: {r: 0.20076516, g: 0.7567088, b: 1, a: 1}

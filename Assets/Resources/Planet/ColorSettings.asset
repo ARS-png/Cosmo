@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ColourSettings
   planetMaterial: {fileID: 2100000, guid: 0555382c5903551458b44a4d345647e0, type: 2}
   atmosphereMaterial: {fileID: 2100000, guid: 9449a430f8f7c354299febbe785f7bf9, type: 2}
+  waterMaterial: {fileID: 0}
   biomeColorSettings:
     biomes:
     - gradient:
@@ -167,33 +168,5 @@ MonoBehaviour:
     m_ColorSpace: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  atmosphereColor:
-    serializedVersion: 2
-    key0: {r: 1, g: 0.59954035, b: 0.05345905, a: 0.5686275}
-    key1: {r: 0.7137255, g: 0.4117647, b: 0.65882355, a: 0.5686275}
-    key2: {r: 0.7137255, g: 0.4117647, b: 0.65882355, a: 0.5686275}
-    key3: {r: 0.7137255, g: 0.4117647, b: 0.65882355, a: 0.5686275}
-    key4: {r: 0.7137255, g: 0.4117647, b: 0.65882355, a: 0.5686275}
-    key5: {r: 0.7137255, g: 0.4117647, b: 0.65882355, a: 0.5686275}
-    key6: {r: 0.7137255, g: 0.4117647, b: 0.65882355, a: 0.5686275}
-    key7: {r: 0.7137255, g: 0.4117647, b: 0.65882355, a: 0.5686275}
-    ctime0: 0
-    ctime1: 65535
-    ctime2: 65535
-    ctime3: 0
-    ctime4: 0
-    ctime5: 0
-    ctime6: 0
-    ctime7: 0
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_ColorSpace: 0
-    m_NumColorKeys: 2
-    m_NumAlphaKeys: 2
+  atmosphereColor: {r: 0.17935707, g: 0.09748411, b: 1, a: 0}
+  waterColor: {r: 1, g: 0.26729542, b: 0.26729542, a: 0}

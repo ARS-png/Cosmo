@@ -74,8 +74,8 @@ Material:
     - _FresnelPower: 30.91
     - _Horizon_DIstance: 10.3
     - _Main_I_Show_Speed: 1
-    - _Main_I_Show_Speed_Limiter: 1.92
-    - _Metallic: 0.78
+    - _Main_I_Show_Speed_Limiter: 5
+    - _Metallic: 0.788
     - _NormalMapTile: 0.0068
     - _NormalMapTile2: 0.0084
     - _Normal_Strength: 3.84
@@ -88,7 +88,7 @@ Material:
     - _dis: 1e+16
     m_Colors:
     - _Color: {r: 1, g: 0, b: 0, a: 1}
-    - _Deep_Water_Color: {r: 0, g: 0.16376142, b: 0.38364768, a: 1}
+    - _Deep_Water_Color: {r: 0, g: 0.20485173, b: 0.47798735, a: 1}
     - _Edge_Froth_Color: {r: 1, g: 0, b: 0.6366868, a: 1}
     - _Horizon_Color: {r: 1, g: 0.7524053, b: 0, a: 1}
     - _Shallow_Water_Color: {r: 0, g: 0, b: 0, a: 0}

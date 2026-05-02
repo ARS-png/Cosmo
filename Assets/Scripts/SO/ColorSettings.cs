@@ -5,9 +5,12 @@ public class ColorSettings : ScriptableObject
 {
     public Material planetMaterial;
     public Material atmosphereMaterial;
+    public Material waterMaterial;
     public BiomeColorSettings biomeColorSettings;
     public Gradient oceanColor;
-    public Gradient atmosphereColor;
+    public Color atmosphereColor;
+    public Color waterColor;
+  
 
 
     [System.Serializable]
