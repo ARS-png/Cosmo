@@ -64,21 +64,21 @@ Material:
     m_Ints: []
     m_Floats:
     - _Depth: 0
-    - _Edge_Forth_Scale: 13.96
-    - _Edge_Forth_Speed: 0.07
+    - _Edge_Forth_Scale: 5.2
+    - _Edge_Forth_Speed: 0.08
     - _Edge_Forth_Speed_2: 4.61
     - _Edge_Front_Stregth: 2.25
     - _Edge_Froth_Smoothness: 2.45
     - _Edge_Froth_Width: -0.02
     - _Float: 0.0012
-    - _FresnelPower: 30.91
+    - _FresnelPower: 3.7
     - _Horizon_DIstance: 10.3
     - _Main_I_Show_Speed: 1
     - _Main_I_Show_Speed_Limiter: 5
     - _Metallic: 0.788
     - _NormalMapTile: 0.0068
     - _NormalMapTile2: 0.0084
-    - _Normal_Strength: 3.84
+    - _Normal_Strength: 2.5
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Second_I_Show_Speed: 0
@@ -89,8 +89,8 @@ Material:
     m_Colors:
     - _Color: {r: 1, g: 0, b: 0, a: 1}
     - _Deep_Water_Color: {r: 0, g: 0.20485173, b: 0.47798735, a: 1}
-    - _Edge_Froth_Color: {r: 1, g: 0, b: 0.6366868, a: 1}
-    - _Horizon_Color: {r: 1, g: 0.7524053, b: 0, a: 1}
+    - _Edge_Froth_Color: {r: 1, g: 0, b: 0.63529396, a: 1}
+    - _Horizon_Color: {r: 0.92639065, g: 0, b: 1, a: 1}
     - _Shallow_Water_Color: {r: 0, g: 0, b: 0, a: 0}
     - _Tiling: {r: 186.8, g: 186.8, b: 0, a: 0}
     - _Vector3: {r: 0, g: 1, b: 0, a: 0}

@@ -1,5 +1,4 @@
-using JetBrains.Annotations;
-using Newtonsoft.Json.Bson;
+
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -14,7 +13,7 @@ public class Effect : MonoBehaviour
     private void Start()
     {
         if (underWaterEffect != null)
-            underWaterEffect.enabled = false;    
+            underWaterEffect.enabled = false;   
     }
 
 
@@ -34,8 +33,5 @@ public class Effect : MonoBehaviour
     {
         if (mask == waterLayer && underWaterEffect != null)
             underWaterEffect.enabled = isUnder;
-        Debug.Log("sdfgdfg");
     }
-
-
 }

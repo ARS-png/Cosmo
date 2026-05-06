@@ -3,18 +3,18 @@ using UnityEngine;
 public class WaterTrigger : MonoBehaviour
 {
     [Header("Settings")]
-    [SerializeField] private LayerMask waterLayer; 
+    public LayerMask WaterLayer;
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("EffectTrigger"))
-            GameEventsManager.Instance.effectsEvents.UseEffect(waterLayer, true);
+            GameEventsManager.Instance.effectsEvents.UseEffect(WaterLayer, true);
     }
 
 
     private void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("EffectTrigger"))
-            GameEventsManager.Instance.effectsEvents.UseEffect(waterLayer, false);
+            GameEventsManager.Instance.effectsEvents.UseEffect(WaterLayer, false);
     }
 }
