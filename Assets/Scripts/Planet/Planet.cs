@@ -1,9 +1,5 @@
-
-using Newtonsoft.Json.Bson;
 using System.Collections;
 using System.Collections.Generic;
-using System.Xml.Schema;
-using UnityEditor.SettingsManagement;
 using UnityEngine;
 
 public class Planet : MonoBehaviour
@@ -23,10 +19,15 @@ public class Planet : MonoBehaviour
     GameObject atmoshereGO;
 
     GameObject underWaterTriggerSphereGO;
+    public static float[] sqrDetailDistances;
 
-    //than destroy
-    public GameObject testGO;
+    public Transform player; //change to the other object
 
+    public static int maxDetailLevel = 5; //  can change
+
+
+    public float cullingMinAngle = 45f;
+    public float distanceToPlayer;
 
     [Range(2, 256)]
     [SerializeField] int resolution = 10;
@@ -50,34 +51,94 @@ public class Planet : MonoBehaviour
 
 
     private bool proceduralyGenerated = false;
-  
+
 
     //For Chunks
     public static Transform playerTransform;
     public Vector3 position;
-    public float size;
+    public float radius;
 
 
-    public static Dictionary<int, float> detailLevelDistances = new Dictionary<int, float>()
-    {
-        { 0, Mathf.Infinity},
-        { 1, 60f},
-        { 2, 25f},
+
+    public static float[] detailLevelDistances = new float[] {
+        Mathf.Infinity,
+        1500f,
+        700f,
+        500f,
+        300f,
+        150f,
+        40f,
+
     };
 
-    private void Awake()
+    public static void InitializeSqrDistances()
     {
-        playerTransform = GameObject.FindWithTag("Player").transform;
+   
+        sqrDetailDistances = new float[detailLevelDistances.Length];
+
+        for (int i = 0; i < detailLevelDistances.Length; i++)
+        {
+         
+            float dist = detailLevelDistances[i];
+
+        
+            if (float.IsPositiveInfinity(dist))
+            {
+                sqrDetailDistances[i] = float.PositiveInfinity;
+            }
+            else
+            {
+                sqrDetailDistances[i] = dist * dist;
+            }
+        }
     }
 
 
-    
+    public static float GetSqrDistance(int level)
+    {
+        if (sqrDetailDistances == null || sqrDetailDistances.Length == 0) InitializeSqrDistances();
+
+        return sqrDetailDistances[level];
+    }
+
+
+
+
+    private void Start()
+    {
+        position = this.gameObject.transform.position;
+
+        if (!proceduralyGenerated)
+            GeneratePlanet();
+
+
+        StartCoroutine(PlanetGenerationLoop());
+    }
+
+    private IEnumerator PlanetGenerationLoop()
+    {
+        GenerateMesh();
+        while (true)
+        {
+            yield return new WaitForSeconds(0.5f);
+            UpdateMesh();
+        }
+    }
+
 
     void Initialize()
     {
 
         shapeGenerator.UpdateSettings(shapeSettings);
         colorGenerator.UpdateSettings(colorSettings);
+
+
+        //
+        this.radius = shapeSettings.planetRadius; //переместить
+
+
+
+        //
 
         if (meshFilters == null || meshFilters.Length == 0)
         {
@@ -108,7 +169,7 @@ public class Planet : MonoBehaviour
 
             meshFilters[i].GetComponent<MeshRenderer>().sharedMaterial = colorSettings.planetMaterial;
 
-            terrainFaces[i] = new TerrainFace(shapeGenerator, meshFilters[i].mesh, resolution, directions[i], shapeSettings.planetRadius, this);
+            terrainFaces[i] = new TerrainFace(shapeGenerator, meshFilters[i].mesh, resolution, directions[i], shapeSettings.planetRadius, this, meshFilters[i].gameObject); //
             bool isRenderFace = faceRenderMask == FaceRenderMask.All || (int)faceRenderMask - 1 == i;
             meshFilters[i].gameObject.SetActive(isRenderFace);
         }
@@ -244,10 +305,12 @@ public class Planet : MonoBehaviour
         Initialize();
         InitializeWater();
         GenerateMesh();
-        //GenerateWaterMesh();s
+        //GenerateWaterMesh();
         GenerateColors();
         GenerateAtmosphere();
     }
+
+
 
 
 
@@ -257,37 +320,19 @@ public class Planet : MonoBehaviour
     {
         for (int i = 0; i < 6; i++)
         {
-            if (meshFilters[i].gameObject.activeSelf)
-            {
-                terrainFaces[i].ConstructTree();
-       
-
-                //if (meshFilters[i].TryGetComponent<MeshCollider>(out var collider))
-                //{
-                //    collider.sharedMesh = null;
-                //    collider.sharedMesh = meshFilters[i].mesh;
-                //}
-            }
+            terrainFaces[i].ConstructTree();
         }
 
         colorGenerator.UpdateElavation(shapeGenerator.elevationMinMax);
     }
 
 
-    public IEnumerator ConstructMeshCourutine()
+    void UpdateMesh()
     {
-        Debug.Log("new mesh is generated");
-        GenerateMesh();
-        yield return null;
-        yield return null;
-        yield return null;
-        yield return null;
-        yield return null;
-    }
-
-    private void Update()
-    {
-        StartCoroutine(ConstructMeshCourutine());
+        foreach (TerrainFace face in terrainFaces)
+        {
+            face.UpdateTree();
+        }
     }
 
 
@@ -362,13 +407,13 @@ public class Planet : MonoBehaviour
         colorGenerator.UpdateSettings(colorSettings);
         colorGenerator.UpdateColors(colorSettings);
 
-        for (int i = 0; i < 6; i++)
-        {
-            if (meshFilters[i].gameObject.activeSelf)
-            {
-                //terrainFaces[i].UpdateUVs(colorGenerator);
-            }
-        }
+        //for (int i = 0; i < 6; i++)
+        //{
+        //    if (meshFilters[i].gameObject.activeSelf)
+        //    {
+        //        //terrainFaces[i].UpdateUVs(colorGenerator);
+        //    }
+        //}
     }
 
 
@@ -385,22 +430,12 @@ public class Planet : MonoBehaviour
         GeneratePlanet();
     }
 
-
-    private void Start()
-    {
-        position = this.gameObject.transform.position;
-
-        if (!proceduralyGenerated)
-            GeneratePlanet();
-
-
-
-    }
-
-
     private void OnDisable()
     {
         colorGenerator.Cleanup();
     }
+
+
+
 
 }

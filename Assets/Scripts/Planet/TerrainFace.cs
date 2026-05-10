@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Unity.Cinemachine;
+using Unity.VisualScripting;
+using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -15,13 +17,23 @@ public class TerrainFace
     float radius;
 
     ShapeGenerator shapeGenerator;
+
+    public GameObject meshHolder;
+
     public Planet planetScript;
+
+    public List<Chunk> visibleChildren = new List<Chunk>();
 
 
     public List<Vector3> vertices = new List<Vector3>();
     public List<int> triangles = new List<int>();
+    List<Vector2> uvs = new List<Vector2>();
 
-    public TerrainFace(ShapeGenerator shapeGenerator, Mesh mesh, int resolution, Vector3 localUp, float radius, Planet planetScript)
+    public Chunk parentChunk;
+
+
+
+    public TerrainFace(ShapeGenerator shapeGenerator, Mesh mesh, int resolution, Vector3 localUp, float radius, Planet planetScript, GameObject meshHolder)
     {
         this.mesh = mesh;
         this.resolution = resolution;
@@ -33,6 +45,8 @@ public class TerrainFace
 
         this.shapeGenerator = shapeGenerator;
         this.planetScript = planetScript;
+
+        this.meshHolder = meshHolder;
     }
 
 
@@ -41,30 +55,100 @@ public class TerrainFace
     {
         vertices.Clear();
         triangles.Clear();
+        uvs.Clear();
+        visibleChildren.Clear();
 
 
-        //Generate chunks
 
-        //fuck
-        Chunk parentChunk = new Chunk(new Chunk[0], null, localUp, 1, 0, localUp, axisA, axisB, planetScript);
+
+        parentChunk = new Chunk(new Chunk[0], null, localUp, 1, 0, localUp, axisA, axisB, planetScript);
         parentChunk.GenerateChildren();
 
-        //Get Chunk Mesh Data
+
+
         int vertexOffset = 0;
+
         foreach (Chunk visibleChild in parentChunk.GetVisibleChildren())
         {
-            (Vector3[], int[], Vector2[] uvs) verticesAndTriangles = visibleChild.CalculateVerticesAndTriangles(vertexOffset);
-            vertices.AddRange(verticesAndTriangles.Item1);
-            triangles.AddRange(verticesAndTriangles.Item2);
-            vertexOffset += verticesAndTriangles.Item1.Length;
+            var data = visibleChild.CalculateVerticesAndTriangles(vertexOffset);
+
+            vertices.AddRange(data.vertices);
+            triangles.AddRange(data.triangles);
+
+            uvs.AddRange(data.uvs);
+
+            vertexOffset += data.vertices.Length;
+        }
+
+        mesh.Clear();
+        mesh.indexFormat = IndexFormat.UInt32;
+
+
+        mesh.SetVertices(vertices);
+        mesh.SetTriangles(triangles, 0);
+        mesh.SetUVs(0, uvs);
+
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+
+
+        TryBakeMesh();
+    }
+
+
+
+    public void UpdateTree()
+    {
+        if (!parentChunk.UpdateChunk())
+        {
+            return;
         }
 
 
+        vertices.Clear();
+        triangles.Clear();
+        uvs.Clear();
+        visibleChildren.Clear();
+
+
+        int vertexOffset = 0;
+        foreach (Chunk visibleChild in parentChunk.GetVisibleChildren())
+        {
+            (Vector3[] vertices, int[] triangles, Vector2[] uvs) data;
+
+
+            if (visibleChild.vertices == null || visibleChild.vertices.Length == 0)
+            {
+                data = visibleChild.CalculateVerticesAndTriangles(vertexOffset);
+            }
+            else
+            { 
+                data = (visibleChild.vertices, visibleChild.GetTrianglesWithOffset(vertexOffset), visibleChild.uvs);
+            }
+
+            
+            vertices.AddRange(data.vertices);
+            triangles.AddRange(data.triangles);
+            uvs.AddRange(data.uvs);
+
+            vertexOffset += data.vertices.Length;
+        }
+
+        // Обновляем меш
         mesh.Clear();
-        mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
+        mesh.indexFormat = IndexFormat.UInt32;
+        mesh.SetVertices(vertices);
+        mesh.SetTriangles(triangles, 0);
+        mesh.SetUVs(0, uvs);
         mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+
+
+        TryBakeMesh();
     }
+
+
+
 
 
     public void ConstructWaterMesh(float planetRadius, float waterRadiusMultiplier)
@@ -115,31 +199,53 @@ public class TerrainFace
         mesh.RecalculateNormals();
     }
 
-
-    public void UpdateUVs(ColorGenerator colorGenerator)
+    private void TryBakeMesh()
     {
-        Vector2[] uv = mesh.uv;
+        if (mesh == null || mesh.vertexCount == 0) return;
 
-        for (int y = 0; y < resolution; y++)
+        if (meshHolder.TryGetComponent<MeshCollider>(out var meshCollider))
         {
-            for (int x = 0; x < resolution; x++)
-            {
-                int i = x + y * resolution;
 
-                Vector2 percent = new Vector2(x, y) / (resolution - 1);
-
-                Vector3 pointOnUnitCube = localUp + (percent.x - .5f) * 2 * axisA + (percent.y - .5f) * 2 * axisB;
-
-                Vector3 pointOnUnitSphere = pointOnUnitCube.normalized;
+            meshCollider.cookingOptions = MeshColliderCookingOptions.UseFastMidphase |
+                                          MeshColliderCookingOptions.WeldColocatedVertices;
 
 
+            Physics.BakeMesh(mesh.GetEntityId(), false);
 
-                uv[i].x = colorGenerator.BiomePercentFromPoint(pointOnUnitSphere);
-            }
+
+            meshCollider.sharedMesh = null;
+            meshCollider.sharedMesh = mesh;
+
+            meshCollider.enabled = true;
         }
-
-        mesh.uv = uv;
     }
+
+
+    //private void TryBakeMesh()
+    //{
+    //    if (mesh == null || mesh.vertexCount == 0) return;
+
+    //    // Получаем ID меша
+    //    int meshID = mesh.GetInstanceID();
+
+    //    // Запускаем запекание в фоновом потоке
+    //    System.Threading.Tasks.Task.Run(() =>
+    //    {
+    //        // Это безопасно вызывать из другого потока для MeshCollider
+    //        Physics.BakeMesh(meshID, false);
+    //    }).ContinueWith(t =>
+    //    {
+    //        // Когда запекание окончено, возвращаемся в основной поток для применения
+    //        UnityEditor.EditorApplication.delayCall += () =>
+    //        {
+    //            if (meshHolder != null && meshHolder.TryGetComponent<MeshCollider>(out var meshCollider))
+    //            {
+    //                meshCollider.sharedMesh = null;
+    //                meshCollider.sharedMesh = mesh;
+    //            }
+    //        };
+    //    }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
+    //}
 }
 
 

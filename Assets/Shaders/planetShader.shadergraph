@@ -1061,9 +1061,6 @@
     ],
     "m_StickyNoteDatas": [
         {
-            "m_Id": "78ea4a40d2b84a76a96c3ed02eeb8c9e"
-        },
-        {
             "m_Id": "f439736f357e4f11ab69d2f476e2885d"
         }
     ],
@@ -7601,7 +7598,7 @@
     "m_ObjectId": "10778cf0734f44e49e2e73ed5f92c30b",
     "m_Title": "Camera Pesok Filter",
     "m_Position": {
-        "x": 5298.0,
+        "x": 5297.99951171875,
         "y": 3725.333251953125
     }
 }
@@ -8032,7 +8029,7 @@
     "m_ObjectId": "156dc2fa42ca4db0b0f46a3af1e0a873",
     "m_Title": "Camera Grass Filter",
     "m_Position": {
-        "x": 501.33349609375,
+        "x": 501.3330078125,
         "y": 13514.0
     }
 }
@@ -12399,7 +12396,7 @@
     "m_ObjectId": "3796d00ceaf14c44a529bcda4730235b",
     "m_Title": "Gradient",
     "m_Position": {
-        "x": 4508.6669921875,
+        "x": 4508.66650390625,
         "y": 1426.66650390625
     }
 }
@@ -13869,7 +13866,7 @@
     "m_ObjectId": "46453e5433724d9d8c0f079783249492",
     "m_Title": "Camera Rock Filter",
     "m_Position": {
-        "x": 1148.666748046875,
+        "x": 1148.66650390625,
         "y": 3890.0
     }
 }
@@ -19943,26 +19940,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.StickyNoteData",
-    "m_ObjectId": "78ea4a40d2b84a76a96c3ed02eeb8c9e",
-    "m_Title": "smoothness",
-    "m_Content": "Write something here",
-    "m_TextSize": 0,
-    "m_Theme": 0,
-    "m_Position": {
-        "serializedVersion": "2",
-        "x": 6258.66650390625,
-        "y": 8263.333984375,
-        "width": 200.0,
-        "height": 160.0
-    },
-    "m_Group": {
-        "m_Id": ""
-    }
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector3MaterialSlot",
     "m_ObjectId": "7918db0fe276425a9aee09a4b1e4fb13",
     "m_Id": 0,
@@ -21302,7 +21279,7 @@
     "m_ObjectId": "82a1998b411342c391f4d606c464798b",
     "m_Title": "Camera Rock Filter",
     "m_Position": {
-        "x": 2406.000244140625,
+        "x": 2406.0,
         "y": 10990.0
     }
 }
@@ -23106,7 +23083,7 @@
     "m_ObjectId": "9150e5f5090e4f2a9564f2c29d81710f",
     "m_Title": "Camera Grass Filter",
     "m_Position": {
-        "x": 679.33349609375,
+        "x": 679.3330078125,
         "y": 1701.99951171875
     }
 }
@@ -23851,7 +23828,7 @@
     "m_ObjectId": "9838714a0c1e4acab84aff1ae408126f",
     "m_Title": "Camera Rock Filter",
     "m_Position": {
-        "x": 2185.33349609375,
+        "x": 2185.333251953125,
         "y": 15365.333984375
     }
 }
@@ -24884,7 +24861,7 @@
     "m_ObjectId": "a12366b5fdbf4831943b238677e804d2",
     "m_Title": "Camera Grass Filter",
     "m_Position": {
-        "x": 680.000244140625,
+        "x": 680.0,
         "y": 6233.99951171875
     }
 }
@@ -25382,7 +25359,7 @@
     "m_ObjectId": "a4dadc773f734f00a30e5831109220c3",
     "m_Title": "Camera Rock Filter",
     "m_Position": {
-        "x": 1674.0,
+        "x": 1673.999755859375,
         "y": 7211.3330078125
     }
 }
@@ -27474,7 +27451,7 @@
     "m_ObjectId": "b64e027e8a4849f79d8eab6016a3c5e1",
     "m_Title": "Camera Pesok Filter",
     "m_Position": {
-        "x": 7334.0,
+        "x": 7333.99951171875,
         "y": 4969.99951171875
     }
 }
@@ -29928,7 +29905,7 @@
     "m_ObjectId": "d06afaacd53c4bd89b0c4f5326f025fa",
     "m_Title": "Camera Pesok Filter",
     "m_Position": {
-        "x": 6094.0,
+        "x": 6093.99951171875,
         "y": 10082.666015625
     }
 }
@@ -31871,7 +31848,7 @@
     "m_ObjectId": "de88e60f19f7408891169b50ac4b7e64",
     "m_Title": "Camera Grass Filter",
     "m_Position": {
-        "x": 591.33349609375,
+        "x": 591.3330078125,
         "y": 9811.333984375
     }
 }
