@@ -168,5 +168,5 @@ MonoBehaviour:
     m_ColorSpace: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  atmosphereColor: {r: 0.17254904, g: 0.24334706, b: 0.3647059, a: 0}
+  atmosphereColor: {r: 0.49552783, g: 0.047058802, b: 0.76862746, a: 0}
   waterColor: {r: 1, g: 0.26729542, b: 0.26729542, a: 0}

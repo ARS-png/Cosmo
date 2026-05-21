@@ -1,0 +1,122 @@
+#pragma kernel CSMain
+#pragma kernel CSCull
+
+
+struct IndirectDrawIndexedArgs
+{
+    uint indexCountPerInstance;
+    uint instanceCount;
+    uint startIndex;
+    uint baseVertexIndex;
+    uint startInstance;
+};
+
+
+RWStructuredBuffer<IndirectDrawIndexedArgs> _CommandBuf;
+
+RWStructuredBuffer<float4x4> _TransformBuf;
+AppendStructuredBuffer<float4x4> _CullBuf;
+
+
+StructuredBuffer<float4> _PlanesBuf; 
+
+
+
+uint _IndexCount;
+uint _GridCount; 
+uint _SqrGridCount;
+float _Spacing;
+float _BaseScaleXZ;
+float _BaseScaleY;
+
+float _Radius;
+
+
+
+float hash(uint x)
+{
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = (x >> 16) ^ x;
+    return float(x) / 4294967295.0; //[0, 1]
+}
+
+
+[numthreads(64, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x == 0)
+    {   
+        _CommandBuf[0].indexCountPerInstance = _IndexCount;
+        _CommandBuf[0].instanceCount = _SqrGridCount/*0*/;
+        _CommandBuf[0].startIndex = 0;
+        _CommandBuf[0].baseVertexIndex = 0;
+        _CommandBuf[0].startInstance = 0;
+    }
+
+    
+    if (id.x < _SqrGridCount)
+    {
+        uint gridX = id.x % _GridCount;
+        
+        uint gridZ = id.x / _GridCount;
+        
+        
+        float randValue = hash(id.x);
+        float randValue2 = hash(id.x + _SqrGridCount);
+        
+        //position
+        float offsetX = (randValue - 0.5f) * _Spacing * 0.8f;
+        float offsetZ = (randValue2 - 0.5f) * _Spacing * 0.8f;
+        
+        float3 pos;
+        pos.x = gridX * _Spacing + offsetX;
+        pos.y = 0.0f;
+        pos.z = gridZ * _Spacing + offsetZ;
+        
+        
+        //rotation
+        float angle = randValue * 6.283185f;
+        float sinA, cosA;
+        sincos(angle, sinA, cosA);
+        
+        //scale
+        float randScaleModifier = 0.8f + (randValue2 * 0.4f);
+        float finalScaleXZ = _BaseScaleXZ * randScaleModifier;
+        float finalScaleY = _BaseScaleY * randScaleModifier;
+        
+        
+        
+        float4x4 transform = float4x4(
+            cosA * finalScaleXZ, 0.0f, sinA * finalScaleXZ, pos.x,
+            0.0f, finalScaleY, 0.0f, pos.y,
+            -sinA * finalScaleXZ, 0.0f, cosA * finalScaleXZ, pos.z,
+            0.0f, 0.0f, 0.0f, 1.0f
+        );
+        
+        
+        _TransformBuf[id.x] = transform;
+    }
+}
+
+[numthreads(64, 1, 1)]
+void CSCull(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x < _SqrGridCount)
+    {
+        float4x4 transformationMatrix = _TransformBuf[id.x];
+        float3 center = transformationMatrix._14_24_34;
+    
+   
+        for (int i = 0; i < 6; i++)
+        {
+            float4 plane = _PlanesBuf[i];
+            float d = dot(plane.xyz, center) + plane.w;
+            if (d <= -_Radius)
+                return;
+        }
+ 
+        
+        _CullBuf.Append(transformationMatrix);
+    }
+}

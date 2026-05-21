@@ -21,12 +21,12 @@ public class Planet : MonoBehaviour
     GameObject underWaterTriggerSphereGO;
     public static float[] sqrDetailDistances;
 
-    public Transform player; //change to the other object
+    public Transform player;
 
     public static int maxDetailLevel = 5; //  can change
 
 
-    public float cullingMinAngle = 45f;
+    public float cullingMinAngle = 120;
     public float distanceToPlayer;
 
     [Range(2, 256)]
@@ -179,64 +179,64 @@ public class Planet : MonoBehaviour
     //Now is unenabled 
     void InitializeWater()
     {
-        //if (waterMeshFilters == null || waterMeshFilters.Length == 0)
-        //{
-        //    waterMeshFilters = new MeshFilter[6];
-        //}
+        if (waterMeshFilters == null || waterMeshFilters.Length == 0)
+        {
+            waterMeshFilters = new MeshFilter[6];
+        }
 
-        //waterTerrainFaces = new TerrainFace[6];
-        //Vector3[] directions = { Vector3.up, Vector3.down, Vector3.left, Vector3.right, Vector3.forward, Vector3.back };
-
-
-        //for (int i = 0; i < waterMeshFilters.Length; i++)
-        //{
-        //    if (waterMeshFilters[i] == null)
-        //    {
-        //        GameObject meshObj = new GameObject("water_mesh");
-        //        meshObj.transform.parent = transform;
-        //        meshObj.transform.position = meshObj.transform.parent.position;
+        waterTerrainFaces = new TerrainFace[6];
+        Vector3[] directions = { Vector3.up, Vector3.down, Vector3.left, Vector3.right, Vector3.forward, Vector3.back };
 
 
-        //        meshObj.AddComponent<MeshRenderer>();
-        //        waterMeshFilters[i] = meshObj.AddComponent<MeshFilter>();
-        //        waterMeshFilters[i].mesh = new Mesh();
+        for (int i = 0; i < waterMeshFilters.Length; i++)
+        {
+            if (waterMeshFilters[i] == null)
+            {
+                GameObject meshObj = new GameObject("water_mesh");
+                meshObj.transform.parent = transform;
+                meshObj.transform.position = meshObj.transform.parent.position;
 
 
-        //        if (colorSettings.waterMaterial != null)
-        //        {
-        //            waterMeshFilters[i].GetComponent<MeshRenderer>().sharedMaterial = colorSettings.waterMaterial;
+                meshObj.AddComponent<MeshRenderer>();
+                waterMeshFilters[i] = meshObj.AddComponent<MeshFilter>();
+                waterMeshFilters[i].mesh = new Mesh();
 
 
-        //            MeshRenderer meshRenderer = meshObj.GetComponent<MeshRenderer>();
-        //            Material mat = meshRenderer.material = colorSettings.waterMaterial;
+                if (colorSettings.waterMaterial != null)
+                {
+                    waterMeshFilters[i].GetComponent<MeshRenderer>().sharedMaterial = colorSettings.waterMaterial;
 
 
-        //            mat.SetVector("_Deep_Water_Color", colorSettings.waterColor); //иожно и больше различий
-
-        //            Color horizonColor = colorSettings.atmosphereColor;
-        //            mat.SetVector("_Horizon_Color", new Vector4(horizonColor.r, horizonColor.g, horizonColor.b, 1));
-        //        }
+                    MeshRenderer meshRenderer = meshObj.GetComponent<MeshRenderer>();
+                    Material mat = meshRenderer.material = colorSettings.waterMaterial;
 
 
-        //        if (meshObj.TryGetComponent<Collider>(out Collider collider))
-        //        {
-        //            Destroy(collider);
-        //        }
+                    mat.SetVector("_Deep_Water_Color", colorSettings.waterColor); //иожно и больше различий
+
+                    Color horizonColor = colorSettings.atmosphereColor;
+                    mat.SetVector("_Horizon_Color", new Vector4(horizonColor.r, horizonColor.g, horizonColor.b, 1));
+                }
 
 
-        //        if (meshObj.TryGetComponent<MeshRenderer>(out MeshRenderer renderer))
-        //        {
-        //            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        //        }
-        //    }
-        //    waterTerrainFaces[i] = new TerrainFace(shapeGenerator, waterMeshFilters[i].mesh, resolution, directions[i], 2012, this);//
-        //    bool renderFace = faceRenderMask == FaceRenderMask.All || (int)faceRenderMask - 1 == i;
-        //    waterMeshFilters[i].gameObject.SetActive(renderFace);
-        //}
+                if (meshObj.TryGetComponent<Collider>(out Collider collider))
+                {
+                    Destroy(collider);
+                }
+
+
+                if (meshObj.TryGetComponent<MeshRenderer>(out MeshRenderer renderer))
+                {
+                    renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                }
+            }
+            waterTerrainFaces[i] = new TerrainFace(shapeGenerator, waterMeshFilters[i].mesh, resolution, directions[i], shapeSettings.planetRadius * shapeSettings.waterRadiusMultiplier, this, waterMeshFilters[i].gameObject);//
+            bool renderFace = faceRenderMask == FaceRenderMask.All || (int)faceRenderMask - 1 == i;
+            waterMeshFilters[i].gameObject.SetActive(renderFace);
+        }
 
 
 
-        //CreateUnderWaterTriggerSphere();
+        CreateUnderWaterTriggerSphere();
 
     }
 
@@ -272,7 +272,7 @@ public class Planet : MonoBehaviour
         }
 
 
-        float diameter = shapeSettings.planetRadius * shapeSettings.waterRadiusMultiplier * 2;
+        float diameter = shapeSettings.planetRadius * shapeSettings.waterRadiusMultiplier * 2  - 1.75f;//изменить позже
         underWaterTriggerSphereGO.transform.localScale = Vector3.one * diameter;
     }
 
@@ -296,7 +296,7 @@ public class Planet : MonoBehaviour
             Initialize();
             InitializeWater();
             GenerateMesh();
-            GenerateColors();
+            UpdateColorGeneratorSettings();
         }
     }
 
@@ -305,8 +305,8 @@ public class Planet : MonoBehaviour
         Initialize();
         InitializeWater();
         GenerateMesh();
-        //GenerateWaterMesh();
-        GenerateColors();
+        GenerateWaterMesh();
+        UpdateColorGeneratorSettings();
         GenerateAtmosphere();
     }
 
@@ -402,18 +402,19 @@ public class Planet : MonoBehaviour
     }
 
 
-    void GenerateColors()
+    void UpdateColorGeneratorSettings()
     {
         colorGenerator.UpdateSettings(colorSettings);
         colorGenerator.UpdateColors(colorSettings);
-
-        //for (int i = 0; i < 6; i++)
-        //{
-        //    if (meshFilters[i].gameObject.activeSelf)
-        //    {
-        //        //terrainFaces[i].UpdateUVs(colorGenerator);
-        //    }
-        //}
+    }
+  
+    private void Update()
+    {
+        if (player != null)
+        {
+            // Расстояние от центра планеты до игрока
+            distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        }
     }
 
 
@@ -428,6 +429,7 @@ public class Planet : MonoBehaviour
         colorGenerator.UpdateSettings(colorSettings);
 
         GeneratePlanet();
+
     }
 
     private void OnDisable()

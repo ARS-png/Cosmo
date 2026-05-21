@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - EffectTrigger
+  - Spaceship
   layers:
   - Default
   - TransparentFX

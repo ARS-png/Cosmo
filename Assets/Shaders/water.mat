@@ -71,7 +71,7 @@ Material:
     - _Edge_Froth_Smoothness: 2.45
     - _Edge_Froth_Width: -0.02
     - _Float: 0.0012
-    - _FresnelPower: 3.7
+    - _FresnelPower: 19.65
     - _Horizon_DIstance: 10.3
     - _Main_I_Show_Speed: 1
     - _Main_I_Show_Speed_Limiter: 5
@@ -84,7 +84,7 @@ Material:
     - _Second_I_Show_Speed: 0
     - _Second_I_Show_Speed_Limiter: -2.18
     - _SmoothnessValue: 1
-    - _Strength: 1.59
+    - _Strength: 3
     - _dis: 1e+16
     m_Colors:
     - _Color: {r: 1, g: 0, b: 0, a: 1}

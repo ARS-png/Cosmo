@@ -1,8 +1,4 @@
-using System;
 using System.Collections.Generic;
-using Unity.Cinemachine;
-using Unity.VisualScripting;
-using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -31,12 +27,10 @@ public class TerrainFace
 
     public Chunk parentChunk;
 
-
-
     public TerrainFace(ShapeGenerator shapeGenerator, Mesh mesh, int resolution, Vector3 localUp, float radius, Planet planetScript, GameObject meshHolder)
     {
         this.mesh = mesh;
-        this.resolution = resolution;
+        this.resolution = resolution; //not need more
         this.localUp = localUp;
         this.radius = radius;
 
@@ -59,11 +53,8 @@ public class TerrainFace
         visibleChildren.Clear();
 
 
-
-
-        parentChunk = new Chunk(new Chunk[0], null, localUp, 1, 0, localUp, axisA, axisB, planetScript);
+        parentChunk = new Chunk(1, this, new Chunk[0], null, localUp, 1, 0, localUp, axisA, axisB, planetScript, 0);
         parentChunk.GenerateChildren();
-
 
 
         int vertexOffset = 0;
@@ -122,11 +113,11 @@ public class TerrainFace
                 data = visibleChild.CalculateVerticesAndTriangles(vertexOffset);
             }
             else
-            { 
+            {
                 data = (visibleChild.vertices, visibleChild.GetTrianglesWithOffset(vertexOffset), visibleChild.uvs);
             }
 
-            
+
             vertices.AddRange(data.vertices);
             triangles.AddRange(data.triangles);
             uvs.AddRange(data.uvs);
@@ -203,49 +194,24 @@ public class TerrainFace
     {
         if (mesh == null || mesh.vertexCount == 0) return;
 
-        if (meshHolder.TryGetComponent<MeshCollider>(out var meshCollider))
+
+        UnityEngine.EntityId meshID = mesh.GetEntityId();
+
+        System.Threading.Tasks.Task.Run(() =>
         {
-
-            meshCollider.cookingOptions = MeshColliderCookingOptions.UseFastMidphase |
-                                          MeshColliderCookingOptions.WeldColocatedVertices;
-
-
-            Physics.BakeMesh(mesh.GetEntityId(), false);
-
-
-            meshCollider.sharedMesh = null;
-            meshCollider.sharedMesh = mesh;
-
-            meshCollider.enabled = true;
-        }
+            Physics.BakeMesh(meshID, false);
+        }).ContinueWith(t =>
+        {
+            UnityEditor.EditorApplication.delayCall += () =>
+            {
+                if (meshHolder != null && meshHolder.TryGetComponent<MeshCollider>(out var meshCollider))
+                {
+                    meshCollider.sharedMesh = null;
+                    meshCollider.sharedMesh = mesh;
+                }
+            };
+        }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext()); //Выполняет в основном потоке
     }
-
-
-    //private void TryBakeMesh()
-    //{
-    //    if (mesh == null || mesh.vertexCount == 0) return;
-
-    //    // Получаем ID меша
-    //    int meshID = mesh.GetInstanceID();
-
-    //    // Запускаем запекание в фоновом потоке
-    //    System.Threading.Tasks.Task.Run(() =>
-    //    {
-    //        // Это безопасно вызывать из другого потока для MeshCollider
-    //        Physics.BakeMesh(meshID, false);
-    //    }).ContinueWith(t =>
-    //    {
-    //        // Когда запекание окончено, возвращаемся в основной поток для применения
-    //        UnityEditor.EditorApplication.delayCall += () =>
-    //        {
-    //            if (meshHolder != null && meshHolder.TryGetComponent<MeshCollider>(out var meshCollider))
-    //            {
-    //                meshCollider.sharedMesh = null;
-    //                meshCollider.sharedMesh = mesh;
-    //            }
-    //        };
-    //    }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
-    //}
 }
 
 
