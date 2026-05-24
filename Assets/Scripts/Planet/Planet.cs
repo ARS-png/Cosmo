@@ -37,7 +37,7 @@ public class Planet : MonoBehaviour
 
     public ShapeSettings shapeSettings;
     public ColorSettings colorSettings;
-    public WaterSettings waterSettings;
+    //public WaterSettings waterSettings;
 
     public ColorGenerator colorGenerator = new ColorGenerator();
     public ShapeGenerator shapeGenerator = new ShapeGenerator();
@@ -59,6 +59,7 @@ public class Planet : MonoBehaviour
     public float radius;
 
 
+    public GrassSettings grassSettings; // Ссылка на наш ScriptableObject профиль
 
     public static float[] detailLevelDistances = new float[] {
         Mathf.Infinity,
@@ -73,15 +74,15 @@ public class Planet : MonoBehaviour
 
     public static void InitializeSqrDistances()
     {
-   
+
         sqrDetailDistances = new float[detailLevelDistances.Length];
 
         for (int i = 0; i < detailLevelDistances.Length; i++)
         {
-         
+
             float dist = detailLevelDistances[i];
 
-        
+
             if (float.IsPositiveInfinity(dist))
             {
                 sqrDetailDistances[i] = float.PositiveInfinity;
@@ -111,6 +112,23 @@ public class Planet : MonoBehaviour
         if (!proceduralyGenerated)
             GeneratePlanet();
 
+        if (terrainFaces != null)
+        {
+            foreach (var face in terrainFaces)
+            {
+                face?.InitializeGrass(
+                     grassSettings.grassComputeShader,
+                     grassSettings.grassMaterial,
+                     grassSettings.grassMeshLOD0,
+                     grassSettings.grassMeshLOD1,
+                     grassSettings.grassMeshLOD2,
+                     grassSettings.maxInstancesPerFace
+                 );
+
+            }
+        }
+
+        proceduralyGenerated = true;
 
         StartCoroutine(PlanetGenerationLoop());
     }
@@ -272,7 +290,7 @@ public class Planet : MonoBehaviour
         }
 
 
-        float diameter = shapeSettings.planetRadius * shapeSettings.waterRadiusMultiplier * 2  - 1.75f;//изменить позже
+        float diameter = shapeSettings.planetRadius * shapeSettings.waterRadiusMultiplier * 2 - 1.75f;//изменить позже
         underWaterTriggerSphereGO.transform.localScale = Vector3.one * diameter;
     }
 
@@ -407,13 +425,32 @@ public class Planet : MonoBehaviour
         colorGenerator.UpdateSettings(colorSettings);
         colorGenerator.UpdateColors(colorSettings);
     }
-  
+
     private void Update()
     {
         if (player != null)
         {
-            // Расстояние от центра планеты до игрока
+            playerTransform = player;
+            position = transform.position;
+
             distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        }
+
+
+        if (proceduralyGenerated && terrainFaces != null)
+        {
+            for (int i = 0; i < terrainFaces.Length; i++)
+            {
+                if (terrainFaces[i] != null && meshFilters[i].gameObject.activeSelf)
+                {
+                    if (grassSettings != null) 
+                    {
+
+                        terrainFaces[i].RenderGrass(grassSettings.grassMeshLOD0, grassSettings.grassMeshLOD1, grassSettings.grassMeshLOD2);
+                    }
+                   
+                }
+            }
         }
     }
 
@@ -437,7 +474,16 @@ public class Planet : MonoBehaviour
         colorGenerator.Cleanup();
     }
 
-
+    private void OnDestroy()
+    {
+        if (terrainFaces != null)
+        {
+            foreach (var face in terrainFaces)
+            {
+                face?.ReleaseGrassBuffers();
+            }
+        }
+    }
 
 
 }
