@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -26,42 +27,20 @@ public class TerrainFace
 
     public Chunk parentChunk;
 
-    #region ПЕРЕМЕННЫЕ ДЛЯ СИСТЕМЫ ТРАВЫ
+    private int chunkRes;
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
     public struct GrassVertexData
     {
         public Vector3 position;
         public Vector3 normal;
+        public Vector2 uvs;
     }
-    private GrassRenderer grassModule;
-    // Единственная лаконичная ссылка на отдельный модуль травы
+    private VegetationRenderer grassModule;
 
+    private List<GrassVertexData> maxDetailVertexData = new List<GrassVertexData>();
 
-    private bool grassInitialized = false;
-    private int totalGrassInstances = 0; // Теперь задается динамически из vertices.Count
-    private int grassThreadGroups;
-
-    private GraphicsBuffer transformBuf;
-    private GraphicsBuffer planesBuffer;
-    private GraphicsBuffer planetVerticesBuffer;
-
-    private GraphicsBuffer cullBufLOD0;
-    private GraphicsBuffer cullBufLOD1;
-    private GraphicsBuffer cullBufLOD2;
-
-    private GraphicsBuffer commandBufLOD0;
-    private GraphicsBuffer commandBufLOD1;
-    private GraphicsBuffer commandBufLOD2;
-
-    private RenderParams renderParamsLOD0;
-    private RenderParams renderParamsLOD1;
-    private RenderParams renderParamsLOD2;
-
-    private Camera mainCamera;
-    private readonly Plane[] cachedPlanes = new Plane[6];
-    private readonly Vector4[] cachedVectors = new Vector4[6];
-    #endregion
-
-    public TerrainFace(ShapeGenerator shapeGenerator, Mesh mesh, int resolution, Vector3 localUp, float radius, Planet planetScript, GameObject meshHolder)
+    public TerrainFace(ShapeGenerator shapeGenerator, Mesh mesh, int resolution, Vector3 localUp, float radius, Planet planetScript, GameObject meshHolder, int chunkRes)
     {
         this.mesh = mesh;
         this.resolution = resolution;
@@ -75,9 +54,11 @@ public class TerrainFace
         this.planetScript = planetScript;
         this.meshHolder = meshHolder;
 
-        grassModule = new GrassRenderer(planetScript, localUp);
+        grassModule = new VegetationRenderer(planetScript, localUp);
 
+        this.chunkRes = chunkRes;
     }
+
     public void ConstructTree()
     {
         vertices.Clear();
@@ -85,7 +66,7 @@ public class TerrainFace
         uvs.Clear();
         visibleChildren.Clear();
 
-        parentChunk = new Chunk(1, this, new Chunk[0], null, localUp, 1, 0, localUp, axisA, axisB, planetScript, 0);
+        parentChunk = new Chunk(1, this, new Chunk[0], null, localUp, 1, 0, localUp, axisA, axisB, planetScript, 0, chunkRes);
         parentChunk.GenerateChildren();
 
         int vertexOffset = 0;
@@ -111,10 +92,10 @@ public class TerrainFace
         mesh.RecalculateBounds();
 
         TryBakeMesh();
-        //UpdateGrassGeometryOnGPU();
-        grassModule.UpdateGeometry(vertices, mesh, planetScript.transform.localToWorldMatrix);
-    }
 
+        GetMaxDetailedChildren();
+    }
+ 
     public void UpdateTree()
     {
         if (!parentChunk.UpdateChunk())
@@ -157,9 +138,79 @@ public class TerrainFace
         mesh.RecalculateBounds();
 
         TryBakeMesh();
-        //UpdateGrassGeometryOnGPU();
-        grassModule.UpdateGeometry(vertices, mesh, planetScript.transform.localToWorldMatrix);
+
+        GetMaxDetailedChildren();
     }
+
+
+    private void GetMaxDetailedChildren()
+    {
+        maxDetailVertexData.Clear();
+        int totalTrianglesCount = 0;
+
+
+       
+        int totalLeaves = 0;
+        int nullVerticesChunks = 0;
+
+        var leaves = parentChunk.GetVisibleMaxDetailLeaves();
+        if (leaves != null)
+        {
+            totalLeaves = leaves.Count();
+        }
+
+        foreach (Chunk visibleChild in leaves)
+        { 
+            if (visibleChild.vertices == null || visibleChild.vertices.Length == 0)
+            {
+                nullVerticesChunks++;
+
+              
+                //visibleChild.CalculateVerticesAndTriangles(0);
+            }
+
+            if (visibleChild.vertices == null || visibleChild.triangles == null) continue;
+
+            Vector3[] chunkVertices = visibleChild.vertices;
+            Vector3[] chunkNormals = visibleChild.normals;
+            Vector2[] chunkUVs = visibleChild.uvs;
+            int[] chunkTriangles = visibleChild.triangles;
+
+            for (int i = 0; i < chunkTriangles.Length; i++)
+            {
+                int vertexIndex = chunkTriangles[i];
+                if (vertexIndex >= chunkVertices.Length) continue;
+
+                GrassVertexData data;
+                data.position = chunkVertices[vertexIndex];
+                data.normal = (chunkNormals != null && chunkNormals.Length > vertexIndex)
+                    ? chunkNormals[vertexIndex]
+                    : chunkVertices[vertexIndex].normalized;
+
+                data.uvs = (chunkUVs != null && chunkUVs.Length > vertexIndex)
+                    ? chunkUVs[vertexIndex]
+                    : Vector2.zero;
+
+                maxDetailVertexData.Add(data);
+            }
+
+            totalTrianglesCount += chunkTriangles.Length / 3;
+        }
+
+
+        if (nullVerticesChunks > 0)
+        {
+            Debug.LogError($"<color=yellow>[Grass Debug]</color> Обнаружено <b>{nullVerticesChunks}</b> из <b>{totalLeaves}</b> детальных чанков без геометрии! Трава на них могла пропасть.");
+        }
+
+        if (maxDetailVertexData.Count == 0 && totalLeaves > 0)
+        {
+            Debug.LogError($"<color=red>[Grass Debug]</color> КРИТИЧЕСКИЙ СБОЙ: Детальные чанки есть ({totalLeaves} шт.), но итоговый массив вершин травы ПУСТОЙ!");
+        }
+
+        grassModule.UpdateGeometry(maxDetailVertexData, planetScript.transform.localToWorldMatrix);
+    }
+
     public void ConstructWaterMesh(float planetRadius, float waterRadiusMultiplier)
     {
         Vector3[] vertices = new Vector3[resolution * resolution];
@@ -206,36 +257,40 @@ public class TerrainFace
 
         System.Threading.Tasks.Task.Run(() =>
         {
-            Physics.BakeMesh(meshID, false);
+            Physics.BakeMesh(meshID, false); // <--- Это работает в фоновом потоке
         }).ContinueWith(t =>
         {
-            UnityEditor.EditorApplication.delayCall += () =>
+            // А вот это ПЫТАЕТСЯ выполниться тоже в фоновом потоке, а не в Главном!
+            if (meshHolder != null && meshHolder.TryGetComponent<MeshCollider>(out var meshCollider))
             {
-                if (meshHolder != null && meshHolder.TryGetComponent<MeshCollider>(out var meshCollider))
-                {
-                    meshCollider.sharedMesh = null;
-                    meshCollider.sharedMesh = mesh;
-                }
-            };
+                meshCollider.sharedMesh = null; // Unity выдаст ошибку или заблокирует поток!
+                meshCollider.sharedMesh = mesh;
+            }
         }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
+        // Последняя строчка обрезана, и планировщик контекста Unity мог не сработать.
+
     }
+
 
     public void InitializeGrass(ComputeShader computeShader, Material grassMaterial, Mesh grassMeshLOD0, Mesh grassMeshLOD1, Mesh grassMeshLOD2, int instancesCount)
     {
-        // Делегируем инициализацию буферов модулю травы
         grassModule.Initialize(grassMeshLOD0, grassMeshLOD1, grassMeshLOD2, grassMaterial, instancesCount, planetScript.transform.position);
-        grassModule.UpdateGeometry(vertices, mesh, planetScript.transform.localToWorldMatrix);
     }
 
+    //tuta
     public void RenderGrass(Mesh grassMeshLOD0, Mesh grassMeshLOD1, Mesh grassMeshLOD2)
     {
-        // Делегируем отрисовку модулю травы
-        grassModule.Render(grassMeshLOD0, grassMeshLOD1, grassMeshLOD2, vertices.Count);
+        int totalTriangles = maxDetailVertexData.Count / 3;
+        int totalInstances = totalTriangles * planetScript.grassSettings.grassPerTriangle;
+
+        grassModule.Render(grassMeshLOD0, grassMeshLOD1, grassMeshLOD2, totalInstances);
     }
+
 
     public void ReleaseGrassBuffers()
     {
-        // Делегируем очистку памяти GPU
-        grassModule.Shutdown();
+        grassModule?.Shutdown();
+        maxDetailVertexData?.Clear();
     }
+
 }

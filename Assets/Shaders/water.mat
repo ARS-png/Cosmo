@@ -33,7 +33,7 @@ Material:
   stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
-  m_LockedProperties: 
+  m_LockedProperties: _Main_Normal _SmoothnessValue
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -74,23 +74,23 @@ Material:
     - _FresnelPower: 19.65
     - _Horizon_DIstance: 10.3
     - _Main_I_Show_Speed: 1
-    - _Main_I_Show_Speed_Limiter: 5
-    - _Metallic: 0.788
-    - _NormalMapTile: 0.0068
-    - _NormalMapTile2: 0.0084
-    - _Normal_Strength: 2.5
+    - _Main_I_Show_Speed_Limiter: 2.04
+    - _Metallic: 0.805
+    - _NormalMapTile: 0.00944
+    - _NormalMapTile2: 0.00207
+    - _Normal_Strength: 2.14
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Second_I_Show_Speed: 0
-    - _Second_I_Show_Speed_Limiter: -2.18
-    - _SmoothnessValue: 1
+    - _Second_I_Show_Speed_Limiter: -0.74
+    - _SmoothnessValue: 0.594
     - _Strength: 3
     - _dis: 1e+16
     m_Colors:
     - _Color: {r: 1, g: 0, b: 0, a: 1}
-    - _Deep_Water_Color: {r: 0, g: 0.20485173, b: 0.47798735, a: 1}
+    - _Deep_Water_Color: {r: 0.12013228, g: 0.16645774, b: 0.5393221, a: 1}
     - _Edge_Froth_Color: {r: 1, g: 0, b: 0.63529396, a: 1}
-    - _Horizon_Color: {r: 0.92639065, g: 0, b: 1, a: 1}
+    - _Horizon_Color: {r: 0.1926764, g: 0.26696533, b: 0.93352103, a: 1}
     - _Shallow_Water_Color: {r: 0, g: 0, b: 0, a: 0}
     - _Tiling: {r: 186.8, g: 186.8, b: 0, a: 0}
     - _Vector3: {r: 0, g: 1, b: 0, a: 0}

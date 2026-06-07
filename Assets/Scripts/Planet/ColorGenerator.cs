@@ -47,7 +47,7 @@ public class ColorGenerator
         return biomeIndex / Mathf.Max(1, (numBiomes - 1));
     }
 
-    public void UpdateElavation(MinMax elevationMinMax)
+    public void UpdateElevation(MinMax elevationMinMax)
     {
         settings.planetMaterial.SetVector("_ElevationMinMax", new Vector4(elevationMinMax.Min, elevationMinMax.Max));
     }

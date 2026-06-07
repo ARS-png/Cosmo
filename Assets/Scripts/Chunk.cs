@@ -21,9 +21,11 @@ public class Chunk
     public int[] triangles;
     public Vector3[] normals;
     public Vector2[] uvs;
-
-
+    
     private Stack<Chunk> stack = new Stack<Chunk>();
+
+
+    private int chunkRes;
 
     public byte corner;
     public uint hashValue;
@@ -57,7 +59,9 @@ public class Chunk
 
 
     //Constructor
-    public Chunk(uint hashValue, TerrainFace terrainFace, Chunk[] children, Chunk parent, Vector3 position, float radius, int detailLevel, Vector3 localUp, Vector3 axisA, Vector3 axisB, Planet planetScript, byte corner)
+
+    
+    public Chunk(uint hashValue, TerrainFace terrainFace, Chunk[] children, Chunk parent, Vector3 position, float radius, int detailLevel, Vector3 localUp, Vector3 axisA, Vector3 axisB, Planet planetScript, byte corner, int chunkRes)
     {
         this.children = children;
         this.parent = parent;
@@ -72,6 +76,7 @@ public class Chunk
         this.corner = corner;
         this.hashValue = hashValue;
         this.terrainFace = terrainFace;
+        this.chunkRes = chunkRes;
     }
 
 
@@ -89,10 +94,19 @@ public class Chunk
             if (current.detailLevel < Planet.maxDetailLevel && current.detailLevel >= 0)
             {
 
-                Vector3 worldSurfacePos = planetScript.transform.TransformPoint(current.position.normalized * planetScript.radius);
+                Vector3 localNormal = current.position.normalized;
+
+             
+                float unscaledElevation = planetScript.shapeGenerator.CalculateUnscaledElevation(localNormal);
+
+                
+                float finalRadius = planetScript.shapeGenerator.GetScaledElevation(unscaledElevation);
+
+     
+                Vector3 worldSurfacePos = planetScript.transform.TransformPoint(localNormal * finalRadius); 
 
 
-                float sqrDist = (worldSurfacePos - planetScript.player.transform.position).sqrMagnitude;
+                float sqrDist = (worldSurfacePos - planetScript.currentCamera.transform.position).sqrMagnitude;
 
 
                 if (sqrDist <= Planet.GetSqrDistance(current.detailLevel))
@@ -103,10 +117,10 @@ public class Chunk
 
                     float half = current.radius * 0.5f;
 
-                    current.children[0] = new Chunk(hashValue * 4, terrainFace, new Chunk[0], current, current.position + current.axisA * half - current.axisB * half, half, current.detailLevel + 1, current.localUp, current.axisA, current.axisB, current.planetScript, Quadrant.NW); //top left
-                    current.children[1] = new Chunk(hashValue * 4 + 1, terrainFace, new Chunk[0], current, current.position + current.axisA * half + current.axisB * half, half, current.detailLevel + 1, current.localUp, current.axisA, current.axisB, current.planetScript, Quadrant.NE); //top right
-                    current.children[2] = new Chunk(hashValue * 4 + 2, terrainFace, new Chunk[0], current, current.position - current.axisA * half + current.axisB * half, half, current.detailLevel + 1, current.localUp, current.axisA, current.axisB, current.planetScript, Quadrant.SE); //bottom right
-                    current.children[3] = new Chunk(hashValue * 4 + 3, terrainFace, new Chunk[0], current, current.position - current.axisA * half - current.axisB * half, half, current.detailLevel + 1, current.localUp, current.axisA, current.axisB, current.planetScript, Quadrant.SW); //bottom left
+                    current.children[0] = new Chunk(hashValue * 4, terrainFace, new Chunk[0], current, current.position + current.axisA * half - current.axisB * half, half, current.detailLevel + 1, current.localUp, current.axisA, current.axisB, current.planetScript, Quadrant.NW, chunkRes); //top left
+                    current.children[1] = new Chunk(hashValue * 4 + 1, terrainFace, new Chunk[0], current, current.position + current.axisA * half + current.axisB * half, half, current.detailLevel + 1, current.localUp, current.axisA, current.axisB, current.planetScript, Quadrant.NE, chunkRes); //top right
+                    current.children[2] = new Chunk(hashValue * 4 + 2, terrainFace, new Chunk[0], current, current.position - current.axisA * half + current.axisB * half, half, current.detailLevel + 1, current.localUp, current.axisA, current.axisB, current.planetScript, Quadrant.SE, chunkRes); //bottom right
+                    current.children[3] = new Chunk(hashValue * 4 + 3, terrainFace, new Chunk[0], current, current.position - current.axisA * half - current.axisB * half, half, current.detailLevel + 1, current.localUp, current.axisA, current.axisB, current.planetScript, Quadrant.SW, chunkRes); //bottom left
 
 
                     foreach (Chunk child in current.children)
@@ -118,31 +132,59 @@ public class Chunk
         }
     }
 
+    public IEnumerable<Chunk> GetVisibleMaxDetailLeaves()
+    {
+        foreach (Chunk chunk in GetVisibleChildren())
+        {
+            if (chunk.detailLevel == Planet.maxDetailLevel)
+            {
+                yield return chunk;
+            }
+        }
+    }
+   
 
     public IEnumerable<Chunk> GetVisibleChildren()
     {
         Stack<Chunk> localStack = new Stack<Chunk>();
         localStack.Push(this);
 
+        // Кэшируем позицию камеры и расстояние до центра планеты ОДИН раз перед циклом
+        Vector3 cameraPos = planetScript.currentCamera.transform.position;
+        Vector3 planetPos = planetScript.transform.position;
+
+        // Честное расстояние от центра планеты до камеры в данный момент
+        float distanceToCamera = Vector3.Distance(planetPos, cameraPos);
+
         while (localStack.Count > 0)
         {
             var current = localStack.Pop();
 
+            // Если это конечный чанк (лист дерева)
             if (current.children == null || current.children.Length == 0)
             {
-                float r = planetScript.radius;
-                float d = planetScript.distanceToPlayer;
+                // 1. Считаем реальный радиус чанка в этой точке (с учетом шума)
+                float unscaledElevation = planetScript.shapeGenerator.CalculateUnscaledElevation(current.normalizedPos);
+                float realRadius = planetScript.shapeGenerator.GetScaledElevation(unscaledElevation);
 
+                // 2. Находим ТОЧНУЮ мировую позицию чанка (учитывает позицию, вращение и шум)
+                Vector3 chunkSurfacePos = planetScript.transform.TransformPoint(current.normalizedPos * realRadius);
 
-                Vector3 chunkSurfacePos = planetScript.transform.position + (current.normalizedPos * r);
-                float c = Vector3.Distance(chunkSurfacePos, planetScript.player.transform.position);
+                // 3. Считаем расстояние от камеры до этой точки на поверхности
+                float distanceToChunkSurface = Vector3.Distance(chunkSurfacePos, cameraPos);
+
+                // 4. Применяем теорему косинусов для угла из центра планеты
+                // r = реальный радиус чанка, d = расстояние до камеры, c = расстояние от чанка до камеры
+                float r = realRadius;
+                float d = distanceToCamera;
+                float c = distanceToChunkSurface;
 
                 float cosAngle = (r * r + d * d - c * c) / (2 * r * d);
                 cosAngle = Mathf.Clamp(cosAngle, -1f, 1f);
 
                 float angleToChunk = Mathf.Acos(cosAngle) * Mathf.Rad2Deg;
 
-
+                // 5. Если чанк входит в конус видимости горизонта — возвращаем его
                 if (angleToChunk < planetScript.cullingMinAngle)
                 {
                     yield return current;
@@ -150,6 +192,7 @@ public class Chunk
             }
             else
             {
+                // Если у чанка есть дети, проверяем их
                 foreach (Chunk child in current.children)
                 {
                     localStack.Push(child);
@@ -160,23 +203,21 @@ public class Chunk
 
 
 
-
     public (Vector3[] vertices, int[] triangles, Vector2[] uvs) CalculateVerticesAndTriangles(int vertexOffset)
     {
-        int resolution = 16; //  Ыыыыынести в настройки планеты
 
-        Vector3[] vertices = new Vector3[resolution * resolution];
-        Vector2[] uvs = new Vector2[resolution * resolution];
-        int[] triangles = new int[(resolution - 1) * (resolution - 1) * 6];
+        Vector3[] vertices = new Vector3[chunkRes * chunkRes];
+        Vector2[] uvs = new Vector2[chunkRes * chunkRes];
+        int[] triangles = new int[(chunkRes - 1) * (chunkRes - 1) * 6];
         int triIndex = 0;
 
-        for (int y = 0; y < resolution; y++)
+        for (int y = 0; y < chunkRes; y++)
         {
-            for (int x = 0; x < resolution; x++)
+            for (int x = 0; x < chunkRes; x++)
             {
-                int i = x + y * resolution;
+                int i = x + y * chunkRes;
 
-                Vector2 percent = new Vector2(x, y) / (resolution - 1);
+                Vector2 percent = new Vector2(x, y) / (chunkRes - 1);
 
                 Vector3 pointOnUnitCube = position + ((percent.x - .5f) * 2 * axisA + (percent.y - .5f) * 2 * axisB) * radius;
 
@@ -195,15 +236,15 @@ public class Chunk
                 uvs[i].y = unscaledElevation;
 
 
-                if (x != resolution - 1 && y != resolution - 1)
+                if (x != chunkRes - 1 && y != chunkRes - 1)
                 {
                     triangles[triIndex] = i;
-                    triangles[triIndex + 1] = i + resolution + 1;
-                    triangles[triIndex + 2] = i + resolution;
+                    triangles[triIndex + 1] = i + chunkRes + 1;
+                    triangles[triIndex + 2] = i + chunkRes;
 
                     triangles[triIndex + 3] = i;
                     triangles[triIndex + 4] = i + 1;
-                    triangles[triIndex + 5] = i + resolution + 1;
+                    triangles[triIndex + 5] = i + chunkRes + 1;
                     triIndex += 6;
                 }
             }
@@ -228,6 +269,10 @@ public class Chunk
         return newTriangles;
     }
 
+
+
+
+  
     public bool UpdateChunk()
     {
         stack.Clear();
@@ -239,19 +284,39 @@ public class Chunk
         {
             Chunk current = stack.Pop();
 
+            // 1. Считаем правильную позицию на поверхности С УЧЕТОМ ШУМА
+            Vector3 localNormal = current.position.normalized;
+            float unscaledElevation = planetScript.shapeGenerator.CalculateUnscaledElevation(localNormal);
+            float realRadius = planetScript.shapeGenerator.GetScaledElevation(unscaledElevation);
 
-            Vector3 worldSurfacePos = planetScript.transform.TransformPoint(current.position.normalized * planetScript.radius);
-            float distSq = (worldSurfacePos - planetScript.player.transform.position).sqrMagnitude;
+            Vector3 worldSurfacePos = planetScript.transform.TransformPoint(localNormal * realRadius);
+
+            // 2. Считаем расстояния
+            float distSq = (worldSurfacePos - planetScript.currentCamera.transform.position).sqrMagnitude;
             float thresholdSq = Planet.sqrDetailDistances[current.detailLevel];
 
+            // Флаг, который зафиксирует, создали ли мы детей ТОЛЬКО ЧТО
+            bool justDivided = false;
+
+            // Условие ДЕЛЕНИЯ чанка
             if (distSq <= thresholdSq && current.detailLevel < Planet.maxDetailLevel)
             {
+                // Если детей еще нет — создаем ТОЛЬКО ОДИН уровень (4 ребенка)
                 if (current.children == null || current.children.Length == 0)
                 {
-                    current.GenerateChildren();
+                    float half = current.radius * 0.5f;
+                    current.children = new Chunk[4];
+
+                    current.children[0] = new Chunk(current.hashValue * 4, terrainFace, new Chunk[0], current, current.position + current.axisA * half - current.axisB * half, half, current.detailLevel + 1, current.localUp, current.axisA, current.axisB, current.planetScript, Quadrant.NW, chunkRes);
+                    current.children[1] = new Chunk(current.hashValue * 4 + 1, terrainFace, new Chunk[0], current, current.position + current.axisA * half + current.axisB * half, half, current.detailLevel + 1, current.localUp, current.axisA, current.axisB, current.planetScript, Quadrant.NE, chunkRes);
+                    current.children[2] = new Chunk(current.hashValue * 4 + 2, terrainFace, new Chunk[0], current, current.position - current.axisA * half + current.axisB * half, half, current.detailLevel + 1, current.localUp, current.axisA, current.axisB, current.planetScript, Quadrant.SE, chunkRes);
+                    current.children[3] = new Chunk(current.hashValue * 4 + 3, terrainFace, new Chunk[0], current, current.position - current.axisA * half - current.axisB * half, half, current.detailLevel + 1, current.localUp, current.axisA, current.axisB, current.planetScript, Quadrant.SW, chunkRes);
+
                     anyChanged = true;
+                    justDivided = true; // Отмечаем, что дети абсолютно новые
                 }
             }
+            // Условие СХЛОПЫВАНИЯ чанка
             else if (distSq > thresholdSq)
             {
                 if (current.children != null && current.children.Length > 0)
@@ -261,8 +326,11 @@ public class Chunk
                 }
             }
 
-
-            if (current.children != null)
+            // 3. ОПТИМИЗАЦИЯ: Идем вглубь только к СТАРЫМ детям
+            // Если чанк был разделен ТОЛЬКО ЧТО в этом кадре, мы НЕ пушим его детей в стек.
+            // Мы даем процессору отдохнуть. Их проверка и возможное дальнейшее деление произойдет 
+            // только на СЛЕДУЮЩЕМ кадре (или при следующем вызове UpdateChunk).
+            if (!justDivided && current.children != null && current.children.Length > 0)
             {
                 foreach (Chunk child in current.children)
                 {
@@ -271,10 +339,8 @@ public class Chunk
             }
         }
 
-
         return anyChanged;
     }
-
 
     #region I_CANT_DO_THIS_SHIT
 

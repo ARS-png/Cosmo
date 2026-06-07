@@ -7,16 +7,15 @@ Shader "Custom/AtmosphereShader"
         _PlanetRadius("Planet Radius", Float) = 1.0
         _AtmosphereRadius("Atmosphere Radius", Float) = 1.2
         _DensityFalloff("Density Falloff", Float) = 4.0
-       _DensityOffset("Density Offset", Float) = 0
+        _DensityOffset("Density Offset", Float) = 0
         
         _OceanRadius("Ocean Radius", Float) = 1.0
         _SunDir("Sun Direction", Vector) = (0, 1, 0, 0)
 
-      
         _NumInScatteringPoints("In-Scattering Points", Int) = 10
         _NumOpticalDepthPoints("Optical Depth Points", Int) = 10
 
-        _ScatteringCoefficients("Scattering Coefficients", Vector) = (0,0,0,0)
+        _ScatteringCoefficients("Scattering Coefficients", Vector) = (1.0, 2.1, 4.3, 0) 
         _InScatteringStrength("In Scattering Strength", Float) = 1
     }
 
@@ -24,9 +23,10 @@ Shader "Custom/AtmosphereShader"
     {
         Tags { "RenderType" = "Transparent" "Queue" = "Transparent" "RenderPipeline" = "UniversalPipeline" }
         
-        Cull Off 
+        Cull Off
         Blend SrcAlpha OneMinusSrcAlpha
         ZWrite Off
+        ZTest Always 
 
         Pass
         {
@@ -81,27 +81,21 @@ Shader "Custom/AtmosphereShader"
             float densityAtPoint(float3 densitySamplePoint)
             {
                 float currentRadius = length(densitySamplePoint - _PlanetCenter);
-    
                 float densityPlanetRadius = _PlanetRadius - _DensityOffset; 
-    
                 float heightAboveSurface = currentRadius - densityPlanetRadius; 
-    
                 float thickness = _AtmosphereRadius - densityPlanetRadius;
                 float height01 = heightAboveSurface / thickness; 
     
                 if (height01 < 0 || height01 > 1) return 0;
 
- 
-                float localDensity = exp(-height01 * _DensityFalloff);
-    
-                return localDensity;
+              
+                return exp(-height01 * _DensityFalloff);
             }
-
 
             float opticalDepth(float3 rayOrigin, float3 rayDir, float rayLength)
             {
                 float3 densitySamplePoint = rayOrigin;
-                float stepSize = rayLength / (_NumOpticalDepthPoints - 1);
+                float stepSize = rayLength / max(1, _NumOpticalDepthPoints - 1);
                 float totalOpticalDepth = 0;
 
                 for(int i = 0; i < _NumOpticalDepthPoints; i++)
@@ -113,9 +107,7 @@ Shader "Custom/AtmosphereShader"
 
                 return totalOpticalDepth;
             }
-
-
-           float3 calculateLight(float3 rayOrigin, float3 rayDir, float rayLength, float3 originalColor) {
+                        float3 calculateLight(float3 rayOrigin, float3 rayDir, float rayLength, float3 originalColor, out float accumulatedOpticalDepth) {
                 float3 inScatterPoint = rayOrigin;
                 float stepSize = rayLength / max(1, _NumInScatteringPoints - 1);
                 float3 inScatteredLight = 0;
@@ -123,34 +115,38 @@ Shader "Custom/AtmosphereShader"
                 float3 dirToSun = normalize(_SunDir);
 
                 float cosAngle = dot(rayDir, dirToSun);
+                
                 float phaseRayleigh = 0.75 * (1.0 + cosAngle * cosAngle);
+                float phaseMie = 0.15 * (1.0 + cosAngle * cosAngle) / pow(abs(1.25 - 0.6 * cosAngle), 1.5);
+
+                float blockingRadius = _PlanetRadius;
 
                 for (int i = 0; i < _NumInScatteringPoints; i++) {
-                    float2 hitPlanet = raySphere(_PlanetCenter, _PlanetRadius, inScatterPoint, dirToSun);
+                    float2 hitPlanet = raySphere(_PlanetCenter, blockingRadius, inScatterPoint, dirToSun);
                     float sunRayOpticalDepth = 0;
 
-                    if (hitPlanet.y < 0) {
+                    if (hitPlanet.y < 0 || hitPlanet.x > hitPlanet.y) {
                         float sunRayLength = raySphere(_PlanetCenter, _AtmosphereRadius, inScatterPoint, dirToSun).y;
                         sunRayOpticalDepth = opticalDepth(inScatterPoint, dirToSun, sunRayLength);
                     } 
-
                     else {
-                    sunRayOpticalDepth = 20; 
+                        sunRayOpticalDepth = 0.5; 
                     }
 
                     float localDensity = densityAtPoint(inScatterPoint);
-
                     viewRayOpticalDepth += localDensity * stepSize;   
 
                     float3 transmittance = exp(-(sunRayOpticalDepth + viewRayOpticalDepth) * _ScatteringCoefficients);
-                    inScatteredLight += localDensity * transmittance * _ScatteringCoefficients * stepSize * _InScatteringStrength;   
+                    
+                    float3 scatteringIntensity = _ScatteringCoefficients * (phaseRayleigh + phaseMie * 1.5);
+                    inScatteredLight += localDensity * transmittance * scatteringIntensity * stepSize * _InScatteringStrength;   
+                    
                     inScatterPoint += rayDir * stepSize;
                 }
 
-                 float originalColorTransmittance = exp(-viewRayOpticalDepth);
-                 return _BaseColor * originalColorTransmittance * inScatteredLight * phaseRayleigh;
+                accumulatedOpticalDepth = viewRayOpticalDepth;
+                return inScatteredLight * originalColor;
             }
-
 
             Varyings vert(Attributes i)
             {
@@ -174,32 +170,52 @@ Shader "Custom/AtmosphereShader"
                 float3 rayOrigin = _WorldSpaceCameraPos;
                 float3 rayDir = normalize(i.viewVector);
 
-                float2 hitInfo = raySphere(_PlanetCenter, _AtmosphereRadius, rayOrigin, rayDir);
-                float t1 = hitInfo.x; 
-                float t2 = hitInfo.y; 
+                float camRadius = length(rayOrigin - _PlanetCenter);
 
+             
+                float2 hitAtmosphere = raySphere(_PlanetCenter, _AtmosphereRadius, rayOrigin, rayDir);
+                float t1 = hitAtmosphere.x; 
+                float t2 = hitAtmosphere.y; 
+
+        
                 if (t2 <= 0) return half4(0,0,0,0);
 
-                float dstToStart = max(0, t1);
+                float dstToStart = max(0.0, t1);
+                if (camRadius <= _AtmosphereRadius)
+                {
+                    dstToStart = 0.0; 
+                }
+
                 float dstToEnd = min(t2, sceneDepth); 
-                float dstThroughAtmosphere = max(0, dstToEnd - dstToStart);
 
-               if(dstThroughAtmosphere > 0)
-               {
-                    const float epsilon = 1;
+        
+                float2 hitOcean = raySphere(_PlanetCenter, _OceanRadius, rayOrigin, rayDir);
+                if (hitOcean.x > 0 && hitOcean.x < dstToEnd)
+                {
+                    dstToEnd = hitOcean.x; 
+                }
 
+                float dstThroughAtmosphere = max(0.0, dstToEnd - dstToStart);
 
+                if (dstThroughAtmosphere > 0)
+                {
+                    const float epsilon = 0.0005;
                     float3 pointInAtmosphere = rayOrigin + rayDir * (dstToStart + epsilon);
                     
-
-                    float3 light = calculateLight(pointInAtmosphere, rayDir, dstThroughAtmosphere - epsilon * 2, _BaseColor);
+                    float viewRayOpticalDepth = 0;
+                    float3 light = calculateLight(pointInAtmosphere, rayDir, max(0.0, dstThroughAtmosphere - epsilon * 2), _BaseColor.rgb, viewRayOpticalDepth);
     
 
-                    return half4(light , .3);
-                   
+                    float3 transmittance = exp(-viewRayOpticalDepth * _ScatteringCoefficients);
+                    float alpha = 1.0 - (transmittance.r + transmittance.g + transmittance.b) / 3.0;
+
+               
+                    alpha = saturate(alpha * 1.0);
+
+                    return half4(light, alpha);
                 }
                 
-              return _BaseColor;
+                return half4(0,0,0,0);
              }
             ENDHLSL
         }

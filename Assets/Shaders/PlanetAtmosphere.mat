@@ -33,19 +33,21 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AtmosphereRadius: 1300
+    - _AtmosphereGlowEdge: 0.5
+    - _AtmosphereRadius: 2769
     - _DebugMode: 2
-    - _DensityFalloff: 20
-    - _DensityOffset: 1032.6
+    - _DensityFalloff: 19.9
+    - _DensityOffset: 12414.59
     - _DistanceScale: 1
     - _EdgeSoftness: 0.1
     - _Falloff: 0
-    - _InScatteringStrength: 157.6
+    - _InScatteringStrength: 15
     - _Intensity: 1
-    - _NumInScatteringPoints: 5
-    - _NumOpticalDepthPoints: 3
-    - _OceanRadius: 1.006
-    - _PlanetRadius: 1000
+    - _NumInScatteringPoints: 25
+    - _NumOpticalDepthPoints: 7
+    - _OceanRadius: 0
+    - _PlanetRadius: 10000
+    - _SpaceFadeStrength: 1.5
     - _StarsDayFade: 3.96
     - _StarsIntensity: 28.89
     - _SunSize: 0.841
@@ -54,7 +56,7 @@ Material:
     - _OceanColor: {r: 0, g: 0.29999998, b: 0.5, a: 1}
     - _PlanetCenter: {r: 0, g: 0, b: 0, a: 0}
     - _ScatteringCoeff: {r: 0.5, g: 0.7, b: 1, a: 1}
-    - _ScatteringCoefficients: {r: 333, g: 552, b: 212.28, a: 0}
+    - _ScatteringCoefficients: {r: 555, g: 22.5, b: 555, a: 0}
     - _SunColor: {r: 1, g: 1, b: 0.8, a: 1}
     - _SunDir: {r: 0, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []

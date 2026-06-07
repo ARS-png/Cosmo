@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.InputSystem; 
 
 namespace Invector.vCharacterController
 {
@@ -6,20 +7,20 @@ namespace Invector.vCharacterController
     {
         #region Variables       
 
-        [Header("Controller Input")]
-        public string horizontalInput = "Horizontal";
-        public string verticallInput = "Vertical";
-        public KeyCode jumpInput = KeyCode.Space;
-        public KeyCode strafeInput = KeyCode.Tab;
-        public KeyCode sprintInput = KeyCode.LeftShift;
+        private @InputSystem_Actions _controls => InputManager.Instance.Controls;
 
-        [Header("Camera Input")]
-        public string rotateCameraXInput = "Mouse X";
-        public string rotateCameraYInput = "Mouse Y";
+        [Header("Camera Settings")]
+        [Tooltip("Чувствительность мыши для Новой системы ввода. Рекомендуется от 0.01 до 0.1")]
+        public float mouseSensitivity = 0.04f;
 
         [HideInInspector] public vThirdPersonController cc;
         [HideInInspector] public vThirdPersonCamera tpCamera;
-        [HideInInspector] public Camera cameraMain;
+
+        // Сделали публичной, чтобы вы могли увидеть её в инспекторе без режима Debug
+        [Header("Debug Info (Сюда можно перетащить камеру вручную)")]
+        public Camera cameraMain;
+
+        private bool _isSprintButtonHeld;
 
         #endregion
 
@@ -27,24 +28,72 @@ namespace Invector.vCharacterController
         {
             InitilizeController();
             InitializeTpCamera();
+
+            // Первичная проверка при старте
+            if (cameraMain == null && Camera.main != null)
+            {
+                cameraMain = Camera.main;
+                Debug.Log($"<color=green>[Invector Debug]</color> Камера успешно привязана в Start(): {cameraMain.name}");
+            }
+        }
+
+        protected virtual void OnEnable()
+        {
+            if (InputManager.Instance == null || _controls == null)
+            {
+                Debug.LogError("<color=red>[Invector Debug]</color> InputManager.Instance или Controls равны null! Проверьте порядок инициализации скриптов.");
+                return;
+            }
+
+            _controls.PlayerControls.Jump.started += OnJump;
+            _controls.PlayerControls.Strafe.started += OnStrafe;
+            _controls.PlayerControls.Sprint.started += OnSprintStart;
+            _controls.PlayerControls.Sprint.canceled += OnSprintStop;
+        }
+
+        protected virtual void OnDisable()
+        {
+            if (InputManager.Instance == null || _controls == null) return;
+
+            _controls.PlayerControls.Jump.started -= OnJump;
+            _controls.PlayerControls.Strafe.started -= OnStrafe;
+            _controls.PlayerControls.Sprint.started -= OnSprintStart;
+            _controls.PlayerControls.Sprint.canceled -= OnSprintStop;
+
+            if (cc != null) cc.input = Vector3.zero;
+            _isSprintButtonHeld = false;
         }
 
         protected virtual void FixedUpdate()
         {
-            cc.UpdateMotor();               // updates the ThirdPersonMotor methods
-            cc.ControlLocomotionType();     // handle the controller locomotion type and movespeed
-            cc.ControlRotationType();       // handle the controller rotation type
+            if (cc != null)
+            {
+                if (cameraMain != null)
+                {
+                    cc.UpdateMoveDirection(cameraMain.transform);
+                }
+                else
+                {
+                    // Если это сработает — персонаж пойдет по мировым осям
+                    Debug.LogWarning("<color=yellow>[Invector Debug]</color> ВНИМАНИЕ: cc.UpdateMoveDirection() вызван БЕЗ трансформа камеры. Персонаж двигается по мировым осям.");
+                    cc.UpdateMoveDirection(null);
+                }
+
+                cc.UpdateMotor();
+                cc.ControlLocomotionType();
+                cc.ControlRotationType();
+            }
         }
 
         protected virtual void Update()
         {
-            InputHandle();                  // update the input methods
-            cc.UpdateAnimator();            // updates the Animator Parameters
+            InputHandle();
+            if (cc != null) cc.UpdateAnimator();
         }
 
         public virtual void OnAnimatorMove()
         {
-            cc.ControlAnimatorRootMotion(); // handle root motion animations 
+            if (cc != null) cc.ControlAnimatorRootMotion();
         }
 
         #region Basic Locomotion Inputs
@@ -52,9 +101,14 @@ namespace Invector.vCharacterController
         protected virtual void InitilizeController()
         {
             cc = GetComponent<vThirdPersonController>();
-
             if (cc != null)
+            {
                 cc.Init();
+            }
+            else
+            {
+                Debug.LogError("<color=red>[Invector Debug]</color> Компонент vThirdPersonController не найден на этом объекте!");
+            }
         }
 
         protected virtual void InitializeTpCamera()
@@ -63,12 +117,12 @@ namespace Invector.vCharacterController
             {
                 tpCamera = FindFirstObjectByType<vThirdPersonCamera>();
                 if (tpCamera == null)
-                    return;
-                if (tpCamera)
                 {
-                    tpCamera.SetMainTarget(this.transform);
-                    tpCamera.Init();
+                    Debug.LogWarning("<color=yellow>[Invector Debug]</color> vThirdPersonCamera не найдена на сцене.");
+                    return;
                 }
+                tpCamera.SetMainTarget(this.transform);
+                tpCamera.Init();
             }
         }
 
@@ -77,72 +131,59 @@ namespace Invector.vCharacterController
             MoveInput();
             CameraInput();
             SprintInput();
-            StrafeInput();
-            JumpInput();
         }
 
         public virtual void MoveInput()
         {
-            cc.input.x = Input.GetAxis(horizontalInput);
-            cc.input.z = Input.GetAxis(verticallInput);
+            if (InputManager.Instance == null || _controls == null) return;
+
+            Vector2 moveDir = _controls.PlayerControls.Move.ReadValue<Vector2>();
+
+            if (cc != null)
+            {
+                cc.input.x = moveDir.x;
+                cc.input.z = moveDir.y;
+            }
         }
 
         protected virtual void CameraInput()
         {
             if (!cameraMain)
             {
-                if (!Camera.main) Debug.Log("Missing a Camera with the tag MainCamera, please add one.");
+                if (!Camera.main)
+                {
+                    Debug.LogError("<color=red>[Invector Debug]</color> На сцене отсутствует камера с тегом 'MainCamera'! Пожалуйста, назначьте тег вашей камере.");
+                }
                 else
                 {
                     cameraMain = Camera.main;
-                    cc.rotateTarget = cameraMain.transform;
+                    if (cc != null) cc.rotateTarget = cameraMain.transform;
+                    Debug.Log($"<color=cyan>[Invector Debug]</color> Камера найдена в Update() через Camera.main: {cameraMain.name}");
                 }
             }
 
-            if (cameraMain)
-            {
-                cc.UpdateMoveDirection(cameraMain.transform);
-            }
+            if (tpCamera == null || InputManager.Instance == null || _controls == null) return;
 
-            if (tpCamera == null)
-                return;
+            // Считываем дельту мыши из карты PlayerControls
+            Vector2 lookDir = _controls.PlayerControls.Look.ReadValue<Vector2>();
 
-            var Y = Input.GetAxis(rotateCameraYInput);
-            var X = Input.GetAxis(rotateCameraXInput);
+            // Корректируем значения пикселей мыши через deltaTime и ползунок чувствительности
+            float mouseX = lookDir.x * mouseSensitivity * Time.deltaTime * 100f;
+            float mouseY = lookDir.y * mouseSensitivity * Time.deltaTime * 100f;
 
-            tpCamera.RotateCamera(X, Y);
+            // Передаем правильные и сглаженные значения в камеру Invector
+            tpCamera.RotateCamera(mouseX, mouseY);
         }
 
-        protected virtual void StrafeInput()
-        {
-            if (Input.GetKeyDown(strafeInput))
-                cc.Strafe();
-        }
+        protected virtual void SprintInput() { if (cc != null) cc.Sprint(_isSprintButtonHeld); }
+        private void OnSprintStart(InputAction.CallbackContext context) => _isSprintButtonHeld = true;
+        private void OnSprintStop(InputAction.CallbackContext context) => _isSprintButtonHeld = false;
+        protected virtual void OnStrafe(InputAction.CallbackContext context) { if (cc != null) cc.Strafe(); }
+        protected virtual bool JumpConditions() => cc != null && cc.isGrounded && cc.GroundAngle() < cc.slopeLimit && !cc.isJumping && !cc.stopMove;
 
-        protected virtual void SprintInput()
+        protected virtual void OnJump(InputAction.CallbackContext context)
         {
-            if (Input.GetKeyDown(sprintInput))
-                cc.Sprint(true);
-            else if (Input.GetKeyUp(sprintInput))
-                cc.Sprint(false);
-        }
-
-        /// <summary>
-        /// Conditions to trigger the Jump animation & behavior
-        /// </summary>
-        /// <returns></returns>
-        protected virtual bool JumpConditions()
-        {
-            return cc.isGrounded && cc.GroundAngle() < cc.slopeLimit && !cc.isJumping && !cc.stopMove;
-        }
-
-        /// <summary>
-        /// Input to trigger the Jump 
-        /// </summary>
-        protected virtual void JumpInput()
-        {
-            if (Input.GetKeyDown(jumpInput) && JumpConditions())
-                cc.Jump();
+            if (JumpConditions() && cc != null) cc.Jump();
         }
 
         #endregion       

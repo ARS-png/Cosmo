@@ -1,10 +1,10 @@
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(PlanetGenerator))]
+[CustomEditor(typeof(RandPlanetGenarator))]
 public class PlanetGeneratorEditor : Editor
 {
-    PlanetGenerator planetGenerator;
+    RandPlanetGenarator planetGenerator;
     Editor planetEditor;
 
     public override void OnInspectorGUI()
@@ -44,6 +44,6 @@ public class PlanetGeneratorEditor : Editor
 
     private void OnEnable()
     {
-        planetGenerator = (PlanetGenerator)target;
+        planetGenerator = (RandPlanetGenarator)target;
     }
 }

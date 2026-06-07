@@ -146,6 +146,6 @@ Material:
     - _smoothnessMultiplier: 0
     - _tile: 0.001
     m_Colors:
-    - _ElevationMinMax: {r: -0.06519642, g: 0.13830562, b: 0, a: 0}
+    - _ElevationMinMax: {r: -0.052720487, g: 0.12525827, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

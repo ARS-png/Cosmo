@@ -95,10 +95,25 @@ public class RandomRigidNoise : RandomValue<NoiseSettings.RigidNoiseSettings>
         settings.roughness = Random.Range(min.roughness, max.roughness);
         settings.strength = Random.Range(min.strength, max.strength);
         settings.center = RandomXT.RandomVector3(min.center, max.center);
-        settings.weightMultiplier = 100;
+        settings.weightMultiplier = Random.Range(min.weightMultiplier, max.weightMultiplier);
 
 
         return lastValue = settings;
     }
+
+
+
+    [System.Serializable]
+    public class RandomVector3 : RandomValue<Vector3>
+    {
+        public RandomVector3(Vector3 min, Vector3 max) : base(min, max) { }
+
+        public override Vector3 PickRandomValue()
+        {
+            // Используем ваш готовый метод из RandomXT для интерполяции между min и max векторами
+            return lastValue = RandomXT.RandomVector3(min, max);
+        }
+    }
+
 }
 

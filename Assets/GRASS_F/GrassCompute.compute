@@ -1,0 +1,203 @@
+#pragma kernel CSMain
+
+struct VertexData
+{
+    float3 position;
+    float3 normal;
+    float2 uvs;
+};
+
+// --- BUFFERS ---
+StructuredBuffer<VertexData> _PlanetVertices;
+AppendStructuredBuffer<float4x4> _CullBufLOD0;
+AppendStructuredBuffer<float4x4> _CullBufLOD1;
+AppendStructuredBuffer<float4x4> _CullBufLOD2;
+StructuredBuffer<float4> _PlanesBuf;
+
+
+float3 _CameraPosition;
+float _LOD1DistSqr;
+float _LOD2DistSqr;
+
+uint _TotalInstances;
+float _BaseScaleXZ;
+float _BaseScaleY;
+float _CullRadius;
+float4x4 _LocalToWorldMatrix;
+uint _GrassPerTriangle;
+
+float _WaterRadius;
+float _GrassDensityThreshold;
+float _GrassNoiseScale;
+float _GrassSlopeThreshold;
+
+// ДОБАВЛЕНО: Мировой центр конкретной планеты
+float3 _PlanetWorldCenter;
+
+float GetNoise3D(float3 p)
+{
+    float scale = max(_GrassNoiseScale, 0.0001f);
+    float3 i = floor(p * scale);
+    float3 f = frac(p * scale);
+    f = f * f * (3.0f - 2.0f * f);
+    
+    float3 dot_dir = float3(127.1f, 311.7f, 74.7f);
+#define n3(c) frac(sin(dot(i + c, dot_dir)) * 43758.5453f)
+    return lerp(lerp(lerp(n3(float3(0,0,0)), n3(float3(1,0,0)), f.x),
+                     lerp(n3(float3(0,1,0)), n3(float3(1,1,0)), f.x), f.y),
+                lerp(n3(float3(0,0,1)), n3(float3(1,0,1)), f.x), f.z);
+#undef n3
+}
+
+
+float3 GetBarycentricWeights(float2 seed)
+{
+    float r1 = frac(sin(dot(seed, float2(12.9898f, 78.233f))) * 43758.5453f);
+    float r2 = frac(cos(dot(seed, float2(19.1231f, 45.512f))) * 43758.5453f);
+    if (r1 + r2 > 1.0f)
+    {
+        r1 = 1.0f - r1;
+        r2 = 1.0f - r2;
+    }
+    float r3 = 1.0f - r1 - r2;
+    return float3(r3, r1, r2);
+}
+
+bool IsCulledByWater(float3 localPos, float waterRadius)
+{
+    return dot(localPos, localPos) < (waterRadius * waterRadius);
+}
+
+bool IsCulledByNoise(float3 localPos, float threshold)
+{
+    return GetNoise3D(localPos) < threshold;
+}
+
+bool IsCulledByFrustum(float3 worldPos, float cullRadius)
+{
+    [unroll]
+    for (int i = 0; i < 6; i++)
+    {
+        float4 plane = _PlanesBuf[i];
+        if (dot(plane.xyz, worldPos) + plane.w <= -cullRadius)
+            return true;
+    }
+    return false;
+}
+
+float3 GetTriangleGeoNormal(float3 v0, float3 v1, float3 v2)
+{
+    float3 edge1 = v1 - v0;
+    float3 edge2 = v2 - v0;
+    return normalize(cross(edge1, edge2));
+}
+
+
+float CalculateWorldSlopeFactor(float3 worldGeoNormal, float3 worldPos, float threshold)
+{
+    float3 planetWorldUp = normalize(worldPos - _PlanetWorldCenter);
+    
+
+    float slopeDot = dot(worldGeoNormal, planetWorldUp);
+    float slopeFadeStart = threshold + 0.12f;
+    return smoothstep(threshold, slopeFadeStart, slopeDot);
+}
+
+
+void GetRandomRotationMatrixBasis(float3 up, float randomAngle, out float3 tangent, out float3 binormal)
+{
+    float3 worldUpDir = (abs(up.y) > 0.999f) ? float3(1.0f, 0.0f, 0.0f) : float3(0.0f, 1.0f, 0.0f);
+    float3 rawTangent = normalize(cross(up, worldUpDir));
+    float3 rawBinormal = cross(up, rawTangent);
+
+    float sinA, cosA;
+    sincos(randomAngle, sinA, cosA); 
+
+    tangent = rawTangent * cosA + rawBinormal * sinA;
+    binormal = cross(up, tangent);
+}
+
+float4x4 BuildTRSMatrix(float3 tangent, float3 up, float3 binormal, float3 pos, float scaleXZ, float scaleY)
+{
+    return float4x4(
+        tangent.x * scaleXZ, up.x * scaleY, binormal.x * scaleXZ, pos.x,
+        tangent.y * scaleXZ, up.y * scaleY, binormal.y * scaleXZ, pos.y,
+        tangent.z * scaleXZ, up.z * scaleY, binormal.z * scaleXZ, pos.z,
+        0.0f, 0.0f, 0.0f, 1.0f
+    );
+}
+
+void AppendToLODBuffer(float4x4 transform, float3 pos, float3 cameraPos, float lod1Sqr, float lod2Sqr)
+{
+    float3 dirToCamera = pos - cameraPos;
+    float distSqr = dot(dirToCamera, dirToCamera);
+
+    if (distSqr < lod1Sqr)
+        _CullBufLOD0.Append(transform);
+    else if (distSqr < lod2Sqr)
+        _CullBufLOD1.Append(transform);
+    else
+        _CullBufLOD2.Append(transform);
+}
+
+[numthreads(64, 1, 1)]
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _TotalInstances)
+        return;
+
+    uint triIndex = id.x / _GrassPerTriangle;
+    uint grassSubIndex = id.x % _GrassPerTriangle;
+
+    uint baseIdx = triIndex * 3;
+    VertexData v0 = _PlanetVertices[baseIdx + 0];
+    VertexData v1 = _PlanetVertices[baseIdx + 1];
+    VertexData v2 = _PlanetVertices[baseIdx + 2];
+
+    float3 triCenter = (v0.position + v1.position + v2.position) * 0.3333333f; 
+    float2 seed = triCenter.xz + float2(grassSubIndex * 15.23f, grassSubIndex * 73.51f);
+
+ 
+    float3 weights = GetBarycentricWeights(seed);
+    float3 localPos = v0.position * weights.x + v1.position * weights.y + v2.position * weights.z;
+
+    if (IsCulledByWater(localPos, _WaterRadius))
+        return;
+
+    if (IsCulledByNoise(localPos, _GrassDensityThreshold))
+        return;
+
+  
+    float3 pos = mul(_LocalToWorldMatrix, float4(localPos, 1.0f)).xyz;
+
+    if (IsCulledByFrustum(pos, _CullRadius))
+        return;
+
+   
+    float3 localGeoNormal = GetTriangleGeoNormal(v0.position, v1.position, v2.position);
+    float3 worldGeoNormal = normalize(mul((float3x3) _LocalToWorldMatrix, localGeoNormal)); 
+    
+    float slopeFactor = CalculateWorldSlopeFactor(worldGeoNormal, pos, _GrassSlopeThreshold);
+
+    if (slopeFactor <= 0.005f) 
+        return;
+
+
+    float3 localNormal = normalize(v0.normal * weights.x + v1.normal * weights.y + v2.normal * weights.z);
+    float3 up = normalize(mul((float3x3) _LocalToWorldMatrix, localNormal));
+
+   
+    float randValue = frac(sin(dot(seed, float2(41.12f, 83.91f))) * 1543.21f);
+    float randomAngle = randValue * 6.28318f;
+
+    float3 tangent, binormal;
+    GetRandomRotationMatrixBasis(up, randomAngle, tangent, binormal);
+
+    float randScale = 0.8f + (randValue * 0.4f);
+    float finalScaleXZ = _BaseScaleXZ * randScale * slopeFactor;
+    float finalScaleY = _BaseScaleY * randScale * slopeFactor;
+
+    float4x4 transform = BuildTRSMatrix(tangent, up, binormal, pos, finalScaleXZ, finalScaleY);
+
+    AppendToLODBuffer(transform, pos, _CameraPosition, _LOD1DistSqr, _LOD2DistSqr);
+}

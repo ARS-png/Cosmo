@@ -3,7 +3,12 @@ guid: 95259565cd48b04479fb5e6dc6f62d17
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Schoolbus_Material
+    second: {fileID: 2100000, guid: 75cb10e21ef4bac45b5fea1ec33cb969, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

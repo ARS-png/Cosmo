@@ -255,6 +255,8 @@ namespace Invector.vCharacterController
         {
             if ((isGrounded && !isJumping)) return;
             if (transform.position.y > heightReached) heightReached = transform.position.y;
+
+
             inputSmooth = Vector3.Lerp(inputSmooth, input, airSmooth * Time.deltaTime);
 
             if (jumpWithRigidbodyForce && !isGrounded)
