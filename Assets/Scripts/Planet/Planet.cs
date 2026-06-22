@@ -24,7 +24,7 @@ public class Planet : MonoBehaviour
     public Transform currentCamera;
 
 
-    public static int maxDetailLevel = 10; //  can change
+    public static int maxDetailLevel = 9; //  can change
 
 
     public float cullingMinAngle = 120;
@@ -49,7 +49,7 @@ public class Planet : MonoBehaviour
     public PlanetConfigSettings planetConfigSettings;
     public ShapeSettings shapeSettings;
     public ColorSettings colorSettings;
-    public GrassSettings grassSettings;
+    public VegetationSettings vegetationSettings;
 
     [HideInInspector]
     public ColorGenerator colorGenerator = new ColorGenerator();
@@ -94,9 +94,9 @@ public class Planet : MonoBehaviour
         1000f,          // LOD 5
         400f,           // LOD 6
         150f,       
-        // LOD 7 (Деревья средней дальности)
-        60f,            // LOD 8 (Высокое качество)
-        25f             // LOD 9 (Самая высокая детализация и трава прямо под ногами)
+
+        60f,            // LOD 8 
+        40f             // LOD 9 (Самая высокая детализация и трава прямо под ногами)
     };
 
     public static void InitializeSqrDistances()
@@ -141,20 +141,16 @@ public class Planet : MonoBehaviour
             yield return StartCoroutine(GeneratePlanetAsync());
         }
 
+
         if (terrainFaces != null)
         {
             foreach (var face in terrainFaces)
             {
-                face?.InitializeGrass(
-                     grassSettings.grassComputeShader,
-                     grassSettings.grassMaterial,
-                     grassSettings.grassMeshLOD0,
-                     grassSettings.grassMeshLOD1,
-                     grassSettings.grassMeshLOD2,
-                     grassSettings.maxInstancesPerFace
-                 );
-                yield return null;
+                // ИСПРАВЛЕНИЕ: Передаем только один параметр — максимальное количество инстансов.
+                // Все меши, шейдеры и материалы метод InitializeGrass теперь возьмет из списка настроек сам!
+                face?.InitializeGrass(vegetationSettings.maxInstancesPerFace);
 
+                yield return null;
             }
         }
 
@@ -536,10 +532,10 @@ public class Planet : MonoBehaviour
             {
                 if (terrainFaces[i] != null && meshFilters[i].gameObject.activeSelf)
                 {
-                    if (grassSettings != null)
+                    if (vegetationSettings != null)
                     {
 
-                        terrainFaces[i].RenderGrass(grassSettings.grassMeshLOD0, grassSettings.grassMeshLOD1, grassSettings.grassMeshLOD2);
+                        terrainFaces[i].RenderGrass();
                     }
                 }
             }
@@ -547,7 +543,7 @@ public class Planet : MonoBehaviour
     }
 
 
-    public void ConstructRandomPlanet(int res, PlanetConfigSettings planetConfigSettings, ShapeSettings shapeSettings, ColorSettings colorSettings, GrassSettings grassSettings)
+    public void ConstructRandomPlanet(int res, PlanetConfigSettings planetConfigSettings, ShapeSettings shapeSettings, ColorSettings colorSettings, VegetationSettings vegetationSettings)
     {
         this.resolution = res;
 
@@ -555,7 +551,7 @@ public class Planet : MonoBehaviour
         this.shapeSettings = shapeSettings;
         this.colorSettings = colorSettings;
 
-        this.grassSettings = grassSettings;
+        this.vegetationSettings = vegetationSettings;
 
 
         //this.hasWater = planetConfigSettings.hasWater;
@@ -591,7 +587,7 @@ public class Planet : MonoBehaviour
         {
             foreach (var face in terrainFaces)
             {
-                face?.ReleaseGrassBuffers();
+                face?.ReleaseVegetationBuffers();
             }
         }
     }

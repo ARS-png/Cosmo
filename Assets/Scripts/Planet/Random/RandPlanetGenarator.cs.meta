@@ -1,2 +1,20 @@
 fileFormatVersion: 2
 guid: 27fde8fca8801dd44bfcc7bd0d969667
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - rndSettings: {fileID: 11400000, guid: dd33d5d5a6017374b9a69f249ffa98c4, type: 2}
+  - copyMaterial: {fileID: 2100000, guid: 0555382c5903551458b44a4d345647e0, type: 2}
+  - copyAtmosphereMaterial: {fileID: 2100000, guid: 9449a430f8f7c354299febbe785f7bf9, type: 2}
+  - copyWaterMaterial: {fileID: 2100000, guid: eb8ea2fbb12e2a14a94f214596f0847a, type: 2}
+  - vegetationCS: {fileID: 7200000, guid: f66bf24b0d106844a8c1ba4d893e8b5a, type: 3}
+  - copyGrassMaterial: {fileID: 2100000, guid: d96c9ac68fbcd8448a76d730b77f3f39, type: 2}
+  - grassMeshLOD0: {instanceID: 0}
+  - grassMeshLOD1: {instanceID: 0}
+  - grassMeshLOD2: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

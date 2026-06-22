@@ -49,7 +49,7 @@ MonoBehaviour:
         m_NumAlphaKeys: 2
       tint: {r: 1, g: 0, b: 0.67274237, a: 0}
       startHeigth: 0
-      tintPercent: 0.234
+      tintPercent: 0.129
     - gradient:
         serializedVersion: 2
         key0: {r: 1, g: 0.32240552, b: 0, a: 1}
@@ -82,7 +82,7 @@ MonoBehaviour:
         m_NumAlphaKeys: 2
       tint: {r: 0.8605972, g: 0.48113197, b: 1, a: 0}
       startHeigth: 0.663
-      tintPercent: 0.429
+      tintPercent: 0
     - gradient:
         serializedVersion: 2
         key0: {r: 0, g: 0.8041401, b: 1, a: 1}
@@ -119,13 +119,13 @@ MonoBehaviour:
     noise:
       filterType: 0
       simpleNoiseSettings:
-        strength: 0
+        strength: 0.01
         roughness: 0.42
-        baseRoughness: 10.65
+        baseRoughness: 1
         center: {x: 0, y: 0, z: 0}
         numLayers: 2
-        persistence: 2.91
-        minValue: 0
+        persistence: 7.75
+        minValue: 9.49
       rigidNoiseSettings:
         strength: 1
         roughness: 2
@@ -137,7 +137,7 @@ MonoBehaviour:
         weightMultiplier: 1
     noiseOffset: 0
     noiseStrength: 0
-    blendAmount: 0.247
+    blendAmount: 0.42
   oceanColor:
     serializedVersion: 2
     key0: {r: 1, g: 0.6949685, b: 0.9792319, a: 1}

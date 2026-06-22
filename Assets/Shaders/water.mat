@@ -75,15 +75,15 @@ Material:
     - _Horizon_DIstance: 10.3
     - _Main_I_Show_Speed: 1
     - _Main_I_Show_Speed_Limiter: 2.04
-    - _Metallic: 0.805
-    - _NormalMapTile: 0.00944
-    - _NormalMapTile2: 0.00207
-    - _Normal_Strength: 2.14
+    - _Metallic: 0.514
+    - _NormalMapTile: 0.01
+    - _NormalMapTile2: 0.00874
+    - _Normal_Strength: 1.93
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Second_I_Show_Speed: 0
     - _Second_I_Show_Speed_Limiter: -0.74
-    - _SmoothnessValue: 0.594
+    - _SmoothnessValue: 0.696
     - _Strength: 3
     - _dis: 1e+16
     m_Colors:

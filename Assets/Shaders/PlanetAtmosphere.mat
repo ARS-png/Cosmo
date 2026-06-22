@@ -34,7 +34,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _AtmosphereGlowEdge: 0.5
-    - _AtmosphereRadius: 2769
+    - _AtmosphereRadius: 10
     - _DebugMode: 2
     - _DensityFalloff: 19.9
     - _DensityOffset: 12414.59
@@ -56,7 +56,7 @@ Material:
     - _OceanColor: {r: 0, g: 0.29999998, b: 0.5, a: 1}
     - _PlanetCenter: {r: 0, g: 0, b: 0, a: 0}
     - _ScatteringCoeff: {r: 0.5, g: 0.7, b: 1, a: 1}
-    - _ScatteringCoefficients: {r: 555, g: 22.5, b: 555, a: 0}
+    - _ScatteringCoefficients: {r: 29, g: 15, b: 555, a: 0}
     - _SunColor: {r: 1, g: 1, b: 0.8, a: 1}
     - _SunDir: {r: 0, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []

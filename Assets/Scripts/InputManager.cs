@@ -33,7 +33,7 @@ public class InputManager : MonoBehaviour
         Controls.ShipControls.Disable();
         Controls.PlayerControls.Enable();
 
-        Debug.Log("[InputManager]: Активирована карта PlayerControls. Карта ShipControls отключена.");
+        //Debug.Log("[InputManager]: Активирована карта PlayerControls. Карта ShipControls отключена.");
     }
 
 
@@ -44,7 +44,7 @@ public class InputManager : MonoBehaviour
         Controls.PlayerControls.Disable();
         Controls.ShipControls.Enable();
 
-        Debug.Log("[InputManager]: Активирована карта ShipControls. Карта PlayerControls отключена.");
+        //Debug.Log("[InputManager]: Активирована карта ShipControls. Карта PlayerControls отключена.");
     }
 
     private void OnDestroy()

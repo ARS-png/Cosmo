@@ -21,7 +21,7 @@ Shader "Custom/AtmosphereShader"
 
     SubShader
     {
-        Tags { "RenderType" = "Transparent" "Queue" = "Transparent" "RenderPipeline" = "UniversalPipeline" }
+        Tags { "RenderType" = "Transparent" "Queue" = "Transparent+100" "RenderPipeline" = "UniversalPipeline" }
         
         Cull Off
         Blend SrcAlpha OneMinusSrcAlpha

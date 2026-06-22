@@ -60,6 +60,7 @@ public class FirstPersonPlanetController : MonoBehaviour
 
     private void Update()
     {
+        if (GameMenuManager.IsGamePaused) return;
         if (_controls == null || playerCamera == null) return;
 
 
@@ -90,6 +91,8 @@ public class FirstPersonPlanetController : MonoBehaviour
 
     private void FixedUpdate()
     {
+
+        if (GameMenuManager.IsGamePaused) return;
         if (attractor != null)
         {
             attractor.Attract(transform, rb);
@@ -118,20 +121,21 @@ public class FirstPersonPlanetController : MonoBehaviour
         {
             rb.AddForce(transform.up * jumpForce, ForceMode.VelocityChange);
 
+            Debug.Log("this is happened");
+
             animator.SetTrigger("Jump");
         }
     }
 
     private void FindNearestPlanet()
     {
-        // Проверяем, есть ли вообще планеты в глобальном списке
         if (FauxGravityAttractor.AllAttractors == null || FauxGravityAttractor.AllAttractors.Count == 0) return;
 
         FauxGravityAttractor nearest = null;
         float shortestDistance = Mathf.Infinity;
         Vector3 currentPosition = transform.position;
 
-        // Ищем планету с минимальным расстоянием до игрока
+    
         foreach (FauxGravityAttractor currentAttractor in FauxGravityAttractor.AllAttractors)
         {
             float distance = Vector3.Distance(currentPosition, currentAttractor.transform.position);

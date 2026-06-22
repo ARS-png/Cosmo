@@ -25,6 +25,9 @@ public class TerrainFace
     public List<int> triangles = new List<int>();
     List<Vector2> uvs = new List<Vector2>();
 
+    public GraphicsBuffer faceVerticesBuffer { get; private set; }//
+
+
     public Chunk parentChunk;
 
     private int chunkRes;
@@ -36,7 +39,7 @@ public class TerrainFace
         public Vector3 normal;
         public Vector2 uvs;
     }
-    private VegetationRenderer grassModule;
+    private VegetationRenderer vegetationRenderer;
 
     private List<GrassVertexData> maxDetailVertexData = new List<GrassVertexData>();
 
@@ -54,7 +57,7 @@ public class TerrainFace
         this.planetScript = planetScript;
         this.meshHolder = meshHolder;
 
-        grassModule = new VegetationRenderer(planetScript, localUp);
+        vegetationRenderer = new VegetationRenderer(planetScript, localUp);
 
         this.chunkRes = chunkRes;
     }
@@ -95,7 +98,7 @@ public class TerrainFace
 
         GetMaxDetailedChildren();
     }
- 
+
     public void UpdateTree()
     {
         if (!parentChunk.UpdateChunk())
@@ -149,7 +152,7 @@ public class TerrainFace
         int totalTrianglesCount = 0;
 
 
-       
+
         int totalLeaves = 0;
         int nullVerticesChunks = 0;
 
@@ -160,13 +163,10 @@ public class TerrainFace
         }
 
         foreach (Chunk visibleChild in leaves)
-        { 
+        {
             if (visibleChild.vertices == null || visibleChild.vertices.Length == 0)
             {
                 nullVerticesChunks++;
-
-              
-                //visibleChild.CalculateVerticesAndTriangles(0);
             }
 
             if (visibleChild.vertices == null || visibleChild.triangles == null) continue;
@@ -198,18 +198,33 @@ public class TerrainFace
         }
 
 
-        if (nullVerticesChunks > 0)
-        {
-            Debug.LogError($"<color=yellow>[Grass Debug]</color> Обнаружено <b>{nullVerticesChunks}</b> из <b>{totalLeaves}</b> детальных чанков без геометрии! Трава на них могла пропасть.");
-        }
 
-        if (maxDetailVertexData.Count == 0 && totalLeaves > 0)
-        {
-            Debug.LogError($"<color=red>[Grass Debug]</color> КРИТИЧЕСКИЙ СБОЙ: Детальные чанки есть ({totalLeaves} шт.), но итоговый массив вершин травы ПУСТОЙ!");
-        }
 
-        grassModule.UpdateGeometry(maxDetailVertexData, planetScript.transform.localToWorldMatrix);
+        UpdateFaceVerticesBuffer(maxDetailVertexData);
+
     }
+
+    private void UpdateFaceVerticesBuffer(List<GrassVertexData> vertexData)
+    {
+        if (vertexData == null || vertexData.Count == 0)
+        {
+            ReleaseFaceBuffer();
+            return;
+        }
+
+
+        if (faceVerticesBuffer == null || faceVerticesBuffer.count != vertexData.Count)
+        {
+            ReleaseFaceBuffer();
+
+
+            faceVerticesBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, vertexData.Count, sizeof(float) * 8);
+        }
+
+
+        faceVerticesBuffer.SetData(vertexData);
+    }
+
 
     public void ConstructWaterMesh(float planetRadius, float waterRadiusMultiplier)
     {
@@ -249,6 +264,9 @@ public class TerrainFace
         mesh.RecalculateNormals();
     }
 
+
+
+
     private void TryBakeMesh()
     {
         if (mesh == null || mesh.vertexCount == 0) return;
@@ -257,40 +275,67 @@ public class TerrainFace
 
         System.Threading.Tasks.Task.Run(() =>
         {
-            Physics.BakeMesh(meshID, false); // <--- Это работает в фоновом потоке
+            Physics.BakeMesh(meshID, false);
         }).ContinueWith(t =>
         {
-            // А вот это ПЫТАЕТСЯ выполниться тоже в фоновом потоке, а не в Главном!
+
             if (meshHolder != null && meshHolder.TryGetComponent<MeshCollider>(out var meshCollider))
             {
-                meshCollider.sharedMesh = null; // Unity выдаст ошибку или заблокирует поток!
+                meshCollider.sharedMesh = null;
                 meshCollider.sharedMesh = mesh;
             }
         }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
-        // Последняя строчка обрезана, и планировщик контекста Unity мог не сработать.
-
     }
 
 
-    public void InitializeGrass(ComputeShader computeShader, Material grassMaterial, Mesh grassMeshLOD0, Mesh grassMeshLOD1, Mesh grassMeshLOD2, int instancesCount)
+
+    public void InitializeGrass(int instancesCount)
     {
-        grassModule.Initialize(grassMeshLOD0, grassMeshLOD1, grassMeshLOD2, grassMaterial, instancesCount, planetScript.transform.position);
+        if (planetScript.vegetationSettings != null && planetScript.vegetationSettings.vegetationTypes != null)
+        {
+
+            vegetationRenderer.Initialize(
+                planetScript.vegetationSettings.vegetationTypes,
+                instancesCount,
+                planetScript.transform.position
+            );
+        }
     }
 
-    //tuta
-    public void RenderGrass(Mesh grassMeshLOD0, Mesh grassMeshLOD1, Mesh grassMeshLOD2)
-    {
-        int totalTriangles = maxDetailVertexData.Count / 3;
-        int totalInstances = totalTriangles * planetScript.grassSettings.grassPerTriangle;
 
-        grassModule.Render(grassMeshLOD0, grassMeshLOD1, grassMeshLOD2, totalInstances);
+
+    public void RenderGrass()
+    {
+        // Если буфер геометрии чанка пустой — рисовать нечего
+        if (faceVerticesBuffer == null || faceVerticesBuffer.count == 0) return;
+
+        // Берём матрицу трансформации у планеты
+        Matrix4x4 localMatrix = planetScript.transform.localToWorldMatrix;
+
+        // Вызываем метод Render БЕЗ параметра totalInstances
+        vegetationRenderer.Render(
+            planetScript.vegetationSettings.vegetationTypes,
+            faceVerticesBuffer,
+            localMatrix
+        );
     }
 
 
-    public void ReleaseGrassBuffers()
+    public void ReleaseFaceBuffer()
     {
-        grassModule?.Shutdown();
+        if (faceVerticesBuffer != null)
+        {
+            faceVerticesBuffer.Release();
+            faceVerticesBuffer = null;
+        }
+    }
+
+    public void ReleaseVegetationBuffers()
+    {
+        // Если в VegetationRenderer нет метода Shutdown, можете закомментировать эту строчку
+        // vegetationRenderer?.Shutdown(); 
         maxDetailVertexData?.Clear();
+        ReleaseFaceBuffer();
     }
 
 }

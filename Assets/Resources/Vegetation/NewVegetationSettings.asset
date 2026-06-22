@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4128ab714886034eb050511978bc1fc, type: 3}
+  m_Name: NewVegetationSettings
+  m_EditorClassIdentifier: Assembly-CSharp::VegetationSettings
+  vegetationCS: {fileID: 7200000, guid: f66bf24b0d106844a8c1ba4d893e8b5a, type: 3}
+  vegetationTypes:
+  - name: grass
+    lod0: {fileID: 4300000, guid: 3672272000f3a1e4d845d2a02ee2137e, type: 2}
+    lod1: {fileID: 4300000, guid: f99a4c598625eeb41a415975d0e1ca29, type: 2}
+    lod2: {fileID: 4300000, guid: b8c56f1f670f81a49a4448515507bd45, type: 2}
+    material: {fileID: 2100000, guid: d96c9ac68fbcd8448a76d730b77f3f39, type: 2}
+    grassPerTriangle: 25
+    slopeThreshold: 0.76
+    noiseScale: 1
+    densityThreshold: 0
+    scaleXZ: 0.88
+    scaleY: 0.44
+  maxInstancesPerFace: 666666
+  cullRadius: 15
+  lod1Dist: 40
+  lod2Dist: 50

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AdaptivePerformance;
@@ -7,6 +8,36 @@ using static NoiseSettings;
 
 public class RandPlanetGenarator : MonoBehaviour
 {
+
+    [System.Serializable]
+    public class VegetationTypeTemplate
+    {
+        public string name = "New Vegetation";
+        public Mesh lod0;
+        public Mesh lod1;
+        public Mesh lod2;
+        public Material baseMaterial;
+
+        [Header("Настройки рандомизации")]
+        public Vector2Int grassPerTriangleRange = new Vector2Int(1, 3);
+        public Vector2 slopeThresholdRange = new Vector2(0.3f, 0.7f);
+        public Vector2 noiseScaleRange = new Vector2(0.1f, 0.5f);
+        public Vector2 densityThresholdRange = new Vector2(0.2f, 0.6f);
+        public Vector2 scaleXZRange = new Vector2(0.8f, 1.5f);
+        public Vector2 scaleYRange = new Vector2(0.5f, 1.4f);
+    }//
+
+
+    [Tooltip("Список шаблонов для генерации разных видов растительности")]
+    public List<VegetationTypeTemplate> vegetationTemplates = new List<VegetationTypeTemplate>();
+
+    [Header("Global Vegetation Culling/LOD settings")]
+    [Range(1000, 1000000)] public int maxInstancesPerFace = 50000;
+    public float cullRadius = 5f;
+    public float lod1Dist = 30f;
+    public float lod2Dist = 70f;
+
+
     [Header("Random Planet Attributes")]
     public RandomPlanetSettings rndSettings;
 
@@ -23,11 +54,9 @@ public class RandPlanetGenarator : MonoBehaviour
 
     [Header("Grass Settings")]
 
-    public ComputeShader copyGrassComputeShader;
+    public ComputeShader vegetationCS;
     public Material copyGrassMaterial;
-    public Mesh grassMeshLOD0;
-    public Mesh grassMeshLOD1;
-    public Mesh grassMeshLOD2;
+    
 
 
     [Header("Слои ландшафта (Всегда 3 слоя)")]
@@ -45,13 +74,9 @@ public class RandPlanetGenarator : MonoBehaviour
     private GameObject planetGO;
     private Planet planet;
 
-    //private Renderer renderer;
 
     private void Awake()
     {
-        //renderer = GetComponent<Renderer>();
-
-
         CreateBasicPlanetObject();
 
         FindPlayerPosition();
@@ -65,50 +90,63 @@ public class RandPlanetGenarator : MonoBehaviour
         ColorSettingsRandomization(colorSettings);
 
 
-        GrassSettings grassSettings = ScriptableObject.CreateInstance<GrassSettings>();
-        GrassSettingsRandomization(grassSettings);
+        VegetationSettings vegetationSettings = ScriptableObject.CreateInstance<VegetationSettings>();
+        VegetationSettingsRandomization(vegetationSettings);
+
 
         PlanetConfigSettings planetConfigSettings = ScriptableObject.CreateInstance<PlanetConfigSettings>();
         PlanetConfigRandomization(planetConfigSettings);
 
 
-
-
-        planet.ConstructRandomPlanet(rndSettings.resolution.PickRandomValue(), planetConfigSettings, shapeSettings, colorSettings, grassSettings);
+        planet.ConstructRandomPlanet(rndSettings.resolution.PickRandomValue(), planetConfigSettings, shapeSettings, colorSettings, vegetationSettings);
     }
 
-    private void GrassSettingsRandomization(GrassSettings grassSettings)
+  
+    private void VegetationSettingsRandomization(VegetationSettings vegSettings)
     {
+        vegSettings.vegetationCS = vegetationCS;
+        vegSettings.maxInstancesPerFace = maxInstancesPerFace;
+        vegSettings.cullRadius = cullRadius;
+        vegSettings.lod1Dist = lod1Dist;
+        vegSettings.lod2Dist = lod2Dist;
 
-        grassSettings.grassScaleXZ = UnityEngine.Random.Range(0.8f, 1.5f);
-        grassSettings.grassScaleY = UnityEngine.Random.Range(0.5f, 1.4f);
+        vegSettings.vegetationTypes = new List<VegetationTypeSettings>();
 
+        foreach (var template in vegetationTemplates)
+        {
+            if (template.baseMaterial == null) continue;
 
+            VegetationTypeSettings typeSettings = new VegetationTypeSettings();
+            typeSettings.name = template.name;
+            typeSettings.lod0 = template.lod0;
+            typeSettings.lod1 = template.lod1;
+            typeSettings.lod2 = template.lod2;
 
+            typeSettings.material = new Material(template.baseMaterial);
 
-        grassSettings.grassSlopeThreshold = UnityEngine.Random.Range(0.3f, 0.7f);
+            if (rndSettings.grassColor != null)
+            {
+                typeSettings.material.SetColor("_ColorTop", rndSettings.grassColor.PickRandomValue());
+            }
 
+            typeSettings.grassPerTriangle = UnityEngine.Random.Range(template.grassPerTriangleRange.x, template.grassPerTriangleRange.y + 1);
+            typeSettings.slopeThreshold = UnityEngine.Random.Range(template.slopeThresholdRange.x, template.slopeThresholdRange.y);
+            typeSettings.noiseScale = UnityEngine.Random.Range(template.noiseScaleRange.x, template.noiseScaleRange.y);
+            typeSettings.densityThreshold = UnityEngine.Random.Range(template.densityThresholdRange.x, template.densityThresholdRange.y);
+            typeSettings.scaleXZ = UnityEngine.Random.Range(template.scaleXZRange.x, template.scaleXZRange.y);
+            typeSettings.scaleY = UnityEngine.Random.Range(template.scaleYRange.x, template.scaleYRange.y);
 
-        grassSettings.grassComputeShader = copyGrassComputeShader;
-        grassSettings.grassMaterial = new Material(copyGrassMaterial);
-
-
-        grassSettings.grassMaterial.SetColor("_ColorTop", rndSettings.grassColor.PickRandomValue());
-
-        grassSettings.grassMeshLOD0 = grassMeshLOD0;
-        grassSettings.grassMeshLOD1 = grassMeshLOD1;
-        grassSettings.grassMeshLOD2 = grassMeshLOD2;
-
-
-        grassSettings.maxInstancesPerFace = 1000000;
+            vegSettings.vegetationTypes.Add(typeSettings);
+        }
     }
+
 
     private void CreateBasicPlanetObject()
     {
         planetGO = new GameObject("Generated Planet");
 
 
-       var ga =  planetGO.AddComponent<FauxGravityAttractor>();
+        var ga = planetGO.AddComponent<FauxGravityAttractor>();
 
         ga.gravityIntensity = -500; //hAed hode
 
@@ -141,7 +179,7 @@ public class RandPlanetGenarator : MonoBehaviour
         shapeSettings.atmosphereRadiusMultiplier = rndSettings.atmosphereRadiusMultiplier.PickRandomValue();
         shapeSettings.waterRadiusMultiplier = rndSettings.waterRadiusMultiplier.PickRandomValue();
 
-   
+
         shapeSettings.noiseLayers = new ShapeSettings.NoiseLayer[3];
 
         // ==========================================================
@@ -154,12 +192,12 @@ public class RandPlanetGenarator : MonoBehaviour
         NoiseSettings noise0 = new NoiseSettings();
         noise0.filterType = NoiseSettings.FilterType.Simple;
 
-    
+
         noise0.simpleNoiseSettings = new NoiseSettings.SimpleNoiseSettings();
 
         var generatedSimple0 = rndSettings.element0_SimpleSettings.PickRandomValue();
 
-      
+
         noise0.simpleNoiseSettings.strength = generatedSimple0.strength;
         noise0.simpleNoiseSettings.roughness = generatedSimple0.roughness;
         noise0.simpleNoiseSettings.baseRoughness = generatedSimple0.baseRoughness;
@@ -181,7 +219,7 @@ public class RandPlanetGenarator : MonoBehaviour
         NoiseSettings noise1 = new NoiseSettings();
         noise1.filterType = NoiseSettings.FilterType.Simple;
 
-   
+
         noise1.simpleNoiseSettings = new NoiseSettings.SimpleNoiseSettings();
 
         var generatedSimple1 = rndSettings.element1_SimpleSettings.PickRandomValue();
@@ -207,7 +245,7 @@ public class RandPlanetGenarator : MonoBehaviour
         NoiseSettings noise2 = new NoiseSettings();
         noise2.filterType = NoiseSettings.FilterType.Rigid;
 
- 
+
         noise2.rigidNoiseSettings = new NoiseSettings.RigidNoiseSettings();
 
         var generatedRigid2 = rndSettings.element2_RigidSettings.PickRandomValue();
